@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}
+
+model User {
+  id            String               @id @default(uuid())
+  name          String
+  phone         String?
+  createdAt     DateTime             @default(now())
+  email         String               @unique
+  password      String
+  avatarUrl     String?
+  capitalCosts  CapitalCost[]
+  userId        Category[]
+  indicators    FinancialIndicator[]
+  summaries     SummaryMonthly[]
+  transactions  Transaction[]
+  PaymentMethod PaymentMethod[]
+}
+
+model Category {
+  id           String          @id @default(uuid())
+  name         String          @default("Tidak diketahui")
+  type         TransactionType
+  userId       String?
+  isDefault    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  user         User?           @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@unique([name, userId])
+}
+
+model PaymentMethod {
+  id   String @id @default(uuid())
+  name String
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  isDefault Boolean @default(false)
+
+  transactions Transaction[]
+
+  @@unique([name, userId])
+}
+
+model Transaction {
+  id              String          @id @default(uuid())
+  userId          String
+  date            DateTime
+  itemName        String
+  type            TransactionType
+  amount          Decimal         @db.Decimal(12, 2)
+  paymentMethodId String?
+  paymentMethod   PaymentMethod?  @relation(fields: [paymentMethodId], references: [id])
+  note            String?
+  recordedAt      DateTime        @default(now())
+  categoryId      String?
+  category        Category?       @relation(fields: [categoryId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
+}
+
+model CapitalCost {
+  id             String   @id @default(uuid())
+  userId         String
+  itemName       String
+  costType       CostType
+  costAmount     Decimal  @db.Decimal(12, 2)
+  lifespanMonths Int
+  startDate      DateTime
+  note           String?
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model SummaryMonthly {
+  id              String          @id @default(uuid())
+  userId          String
+  month           String
+  totalIncome     Decimal         @db.Decimal(12, 2)
+  totalExpense    Decimal         @db.Decimal(12, 2)
+  netProfit       Decimal         @db.Decimal(12, 2)
+  breakEvenPoint  Decimal         @db.Decimal(12, 2)
+  cashFlow        Decimal         @db.Decimal(12, 2)
+  financialStatus FinancialStatus
+  createdAt       DateTime        @default(now())
+  user            User            @relation(fields: [userId], references: [id])
+}
+
+model FinancialIndicator {
+  id            String          @id @default(uuid())
+  userId        String
+  month         String
+  grossMargin   Decimal         @db.Decimal(5, 2)
+  netMargin     Decimal         @db.Decimal(5, 2)
+  expenseRatio  Decimal         @db.Decimal(5, 2)
+  bepStatus     String
+  statusSummary FinancialStatus
+  createdAt     DateTime        @default(now())
+  user          User            @relation(fields: [userId], references: [id])
+}
+
+enum CostType {
+  fixed
+  variable
+}
+
+enum FinancialStatus {
+  Sehat
+  Waspada
+  Kritis
+}
+
+enum TransactionType {
+  PEMASUKAN
+  PENGELUARAN
+}
