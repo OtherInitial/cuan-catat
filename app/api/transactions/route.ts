@@ -10,23 +10,29 @@ import { createTransactionSchema } from '@/lib/schemas';
 export async function GET(request: NextRequest) {
   try {
     const authUser = getAuthUser(request);
-    const { searchParams } = new URL(request.url);
-    const from = searchParams.get('from');
-    const to = searchParams.get('to');
+    const { searchParams } = request.nextUrl;
+    const yearStr = searchParams.get('year');
+    const monthStr = searchParams.get('month');
 
-    const where: any = {
-      userId: authUser.id,
-    };
-
-    if (from && to) {
-      where.date = {
-        gte: new Date(from),
-        lte: new Date(to),
-      };
+    if (!yearStr || !monthStr) {
+        return new NextResponse(JSON.stringify({ message: "Parameter tahun dan bulan diperlukan" }), { status: 400 });
     }
 
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr); 
+
+    const startDate = new Date(year, month - 1, 1);
+  
+    const endDate = new Date(year, month, 1);
+
     const transactions = await prisma.transaction.findMany({
-      where: where,
+      where: {
+        userId: authUser.id,
+        date: {
+          gte: startDate,
+          lt: endDate
+        }
+      },
       include: {
         category: true,
         paymentMethod: true,
@@ -71,53 +77,54 @@ export async function POST(request: NextRequest) {
   try {
     const authUser = getAuthUser(request);
     const body = await request.json();
+    console.log("checking body: ", body);
 
     const data = createTransactionSchema.parse(body);
 
-    let finalCategoryId = data.categoryId;
+    // let finalCategoryId = data.categoryId;
 
-    if (finalCategoryId && !validateUuid(finalCategoryId)) {
-      const newCategoryName = finalCategoryId;
-      let existingCategory = await prisma.category.findFirst({
-        where: { 
-            userId: authUser.id, 
-            name: newCategoryName, 
-            type: data.type 
-        },
-      });
+    // if (finalCategoryId && !validateUuid(finalCategoryId)) {
+    //   const newCategoryName = finalCategoryId;
+    //   let existingCategory = await prisma.category.findFirst({
+    //     where: { 
+    //         userId: authUser.id, 
+    //         name: newCategoryName, 
+    //         type: data.type 
+    //     },
+    //   });
 
-      if (existingCategory) {
-        finalCategoryId = existingCategory.id;
-      } else {
-        const newCategory = await prisma.category.create({
-          data: { 
-            userId: authUser.id, 
-            name: newCategoryName, 
-            type: data.type 
-        },
-        });
-        finalCategoryId = newCategory.id;
-      }
-    } else if (!finalCategoryId) {
-      let defaultCategory = await prisma.category.findFirst({
-        where: { 
-            userId: authUser.id, 
-            name: "Tidak diketahui", 
-            type: data.type 
-        },
-      });
-      if (!defaultCategory) {
-        defaultCategory = await prisma.category.create({
-          data: { 
-            userId: authUser.id, 
-            name: "Tidak diketahui", 
-            type: data.type, 
-            isDefault: true 
-        },
-        });
-      }
-      finalCategoryId = defaultCategory.id;
-    }
+    //   if (existingCategory) {
+    //     finalCategoryId = existingCategory.id;
+    //   } else {
+    //     const newCategory = await prisma.category.create({
+    //       data: { 
+    //         userId: authUser.id, 
+    //         name: newCategoryName, 
+    //         type: data.type 
+    //     },
+    //     });
+    //     finalCategoryId = newCategory.id;
+    //   }
+    // } else if (!finalCategoryId) {
+    //   let defaultCategory = await prisma.category.findFirst({
+    //     where: { 
+    //         userId: authUser.id, 
+    //         name: "Tidak diketahui", 
+    //         type: data.type 
+    //     },
+    //   });
+    //   if (!defaultCategory) {
+    //     defaultCategory = await prisma.category.create({
+    //       data: { 
+    //         userId: authUser.id, 
+    //         name: "Tidak diketahui", 
+    //         type: data.type, 
+    //         isDefault: true 
+    //     },
+    //     });
+    //   }
+    //   finalCategoryId = defaultCategory.id;
+    // }
 
     let finalPaymentMethodId = data.paymentMethodId;
 
@@ -152,7 +159,7 @@ export async function POST(request: NextRequest) {
         type: data.type,
         amount: data.amount, 
         note: data.note,
-        categoryId: finalCategoryId,
+        categoryId: null,
         paymentMethodId: finalPaymentMethodId,
       },
       include: {

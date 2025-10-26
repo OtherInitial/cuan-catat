@@ -2,15 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "./ui/button";
+
 import {
     Sheet,
     SheetContent,
     SheetClose,
     SheetTrigger,
     SheetHeader,  
-    SheetTitle,   
+    SheetTitle,
+    SheetFooter,   
 } from "@/components/ui/sheet";
+import { Button } from "./ui/button";
+
+import { LogoutButton } from "./LogoutButton";
 
 export function Navbar() {
     return (
@@ -21,68 +25,74 @@ export function Navbar() {
                 height={70}
             />
 
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button variant="secondary" className="bg-white">
-                        <Image
-                            src="/images/burger_menu.png" alt="logo cuan catat"
-                            width={25}
-                            height={25}
-                        />
-                    </Button>
-                </SheetTrigger>
-                
-                <SheetContent side="left" className="w-[300px]">
-                    <SheetHeader className="border-b pb-4 mb-3 text-left">
-                        <Image
-                            src="/images/logo_apk.png" alt="logo cuan catat"
-                            width={50}
-                            height={50}
-                        />
-                        <SheetTitle className="text-xl font-semibold mt-2">
-                            CuanCatat Menu
-                        </SheetTitle>
-                    </SheetHeader>
+            <div className="flex items-center">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="secondary" className="bg-white">
+                            <Image
+                                src="/images/burger_menu.png" alt="logo cuan catat"
+                                width={25}
+                                height={25}
+                            />
+                        </Button>
+                    </SheetTrigger>
+                    
+                    <SheetContent side="left" className="w-[300px]">
+                        <SheetHeader className="border-b pb-4 mb-3 text-left">
+                            <Image
+                                src="/images/logo_apk.png" alt="logo cuan catat"
+                                width={50}
+                                height={50}
+                            />
+                            <SheetTitle className="text-xl font-semibold mt-2">
+                                CuanCatat Menu
+                            </SheetTitle>
+                        </SheetHeader>
 
-                    <nav className="flex flex-col space-y-1">
-                        <SheetClose asChild>
-                            <Link
-                                href="/dashboard"
-                                className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                Dashboard
-                            </Link>
-                        </SheetClose>
-                        
-                        <SheetClose asChild>
-                            <Link
-                                href="/report"
-                                className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                Transaksi
-                            </Link>
-                        </SheetClose>
-                        
-                        <SheetClose asChild>
-                            <Link
-                                href="/laporan"
-                                className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                Riwayat Keuangan
-                            </Link>
-                        </SheetClose>
+                        <nav className="flex flex-col space-y-1">
+                            <SheetClose asChild>
+                                <Link
+                                    href="/dashboard"
+                                    className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
+                                >
+                                    Dashboard
+                                </Link>
+                            </SheetClose>
+                            
+                            <SheetClose asChild>
+                                <Link
+                                    href="/report"
+                                    className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
+                                >
+                                    Transaksi
+                                </Link>
+                            </SheetClose>
+                            
+                            <SheetClose asChild>
+                                <Link
+                                    href="/history"
+                                    className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
+                                >
+                                    Riwayat Keuangan
+                                </Link>
+                            </SheetClose>
 
-                        <SheetClose asChild>
-                            <Link
-                                href="/profil"
-                                className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
-                            >
-                                Pengaturan
-                            </Link>
-                        </SheetClose>
-                    </nav>
-                </SheetContent>
-            </Sheet>
+                            <SheetClose asChild>
+                                <Link
+                                    href="/setting"
+                                    className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
+                                >
+                                    Pengaturan
+                                </Link>
+                            </SheetClose>
+                        </nav>
+
+                        <SheetFooter>
+                            <LogoutButton />
+                        </SheetFooter>
+                    </SheetContent>
+                </Sheet>
+            </div>
         </nav>
     );
 }

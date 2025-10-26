@@ -1,5 +1,6 @@
 "use client";
 
+import { EditTransactionSheet } from "@/features/transaction/components/edit-transaction-sheet";
 import { NewTransactionSheet } from "@/features/transaction/components/new-transaction-sheet";
 
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ export const SheetProvider = () => {
     return (
         <>
             <NewTransactionSheet />
+            <EditTransactionSheet />
         </>
     );
 }

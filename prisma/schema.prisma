@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-  id            String               @id @default(uuid())
-  name          String
-  phone         String?
-  createdAt     DateTime             @default(now())
-  email         String               @unique
-  password      String
-  avatarUrl     String?
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  email     String   @unique
+  password  String
+  avatarUrl String?
+  address   String?
+
   capitalCosts  CapitalCost[]
-  userId        Category[]
-  indicators    FinancialIndicator[]
+  indicators    FinancialIndicators[]
   summaries     SummaryMonthly[]
   transactions  Transaction[]
   PaymentMethod PaymentMethod[]
+  Category      Category[]
 }
 
 model Category {
@@ -64,6 +66,8 @@ model Transaction {
   categoryId      String?
   category        Category?       @relation(fields: [categoryId], references: [id])
   user            User            @relation(fields: [userId], references: [id])
+  ItemMapping     ItemMapping?    @relation(fields: [itemMappingId], references: [id])
+  itemMappingId   Int?
 
   @@index([userId, date])
 }
@@ -80,31 +84,56 @@ model CapitalCost {
   user           User     @relation(fields: [userId], references: [id])
 }
 
-model SummaryMonthly {
-  id              String          @id @default(uuid())
-  userId          String
-  month           String
-  totalIncome     Decimal         @db.Decimal(12, 2)
-  totalExpense    Decimal         @db.Decimal(12, 2)
-  netProfit       Decimal         @db.Decimal(12, 2)
-  breakEvenPoint  Decimal         @db.Decimal(12, 2)
-  cashFlow        Decimal         @db.Decimal(12, 2)
-  financialStatus FinancialStatus
-  createdAt       DateTime        @default(now())
-  user            User            @relation(fields: [userId], references: [id])
+model FinancialIndicators {
+  id             Int            @id @default(autoincrement())
+  userId         String
+  month          String
+  bepRupiah      Float?
+  profitMargin   Float?
+  cashflowStatus CashflowStatus
+  note           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  summaryMonthlyId Int?            @unique
+  summaryMonthly   SummaryMonthly? @relation(name: "SummaryToIndicators", fields: [summaryMonthlyId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
 }
 
-model FinancialIndicator {
-  id            String          @id @default(uuid())
-  userId        String
-  month         String
-  grossMargin   Decimal         @db.Decimal(5, 2)
-  netMargin     Decimal         @db.Decimal(5, 2)
-  expenseRatio  Decimal         @db.Decimal(5, 2)
-  bepStatus     String
-  statusSummary FinancialStatus
-  createdAt     DateTime        @default(now())
-  user          User            @relation(fields: [userId], references: [id])
+model ItemMapping {
+  id          Int       @id @default(autoincrement())
+  itemName    String    @unique
+  groupType   GroupType
+  defaultUnit String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  transactions Transaction[]
+}
+
+model SummaryMonthly {
+  id                   Int      @id @default(autoincrement())
+  userId               String
+  month                String
+  totalIncome          Float    @default(0)
+  totalExpenseFixed    Float    @default(0)
+  totalExpenseVariable Float    @default(0)
+  netProfit            Float    @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  financialIndicators FinancialIndicators? @relation(name: "SummaryToIndicators")
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum GroupType {
+  PEMASUKAN
+  TETAP
+  VARIABEL
+  MODAL
 }
 
 enum CostType {
@@ -112,13 +141,13 @@ enum CostType {
   variable
 }
 
-enum FinancialStatus {
-  Sehat
-  Waspada
-  Kritis
-}
-
 enum TransactionType {
   PEMASUKAN
   PENGELUARAN
+}
+
+enum CashflowStatus {
+  SEHAT
+  WASPADA
+  KRITIS
 }

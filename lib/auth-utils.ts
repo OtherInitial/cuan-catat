@@ -7,8 +7,13 @@ interface UserPayload {
 }
 
 export function getAuthUser(req: NextRequest): UserPayload {
-  const tokenCookie = req.cookies.get("auth_token");
-  const token = tokenCookie?.value;
+  const authHeader = req.headers.get("Authorization");
+  let token: string | undefined = authHeader?.split(" ")[1];
+
+  if (!token) {
+    const tokenCookie = req.cookies.get("auth_token");
+    token = tokenCookie?.value;
+  }
   
   if (!token) {
     throw new Error('Unauthorized'); 

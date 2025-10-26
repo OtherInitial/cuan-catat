@@ -33,11 +33,15 @@ function handleError(error: any) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params; // Await params
+    const transactionId = params.id;
+
     const authUser = getAuthUser(request);
-    const transaction = await verifyTransactionOwner(authUser.id, params.id);
+    
+    const transaction = await verifyTransactionOwner(authUser.id, transactionId);
     return NextResponse.json(transaction);
   } catch (error: any) {
     return handleError(error);
@@ -46,9 +50,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params; // Await params
     const authUser = getAuthUser(request);
 
     await verifyTransactionOwner(authUser.id, params.id);
@@ -63,9 +68,7 @@ export async function PATCH(
       },
       data: {
         ...data,
-
         amount: data.amount ? data.amount : undefined,
-
         date: data.date ? new Date(data.date) : undefined,
       },
     });
@@ -77,9 +80,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params; // Await params
     const authUser = getAuthUser(request);
 
     await verifyTransactionOwner(authUser.id, params.id);

@@ -57,19 +57,23 @@ type Option = {
 type Props = {
     onSubmit: (values: FormValues) => void;
     disabled: boolean;
-    categoryOptions: Option[];
-    paymentMethodOptions: Option[]; 
+    // categoryOptions: Option[];
+    paymentMethodOptions: Option[];
+    initialValues? : FormValues; 
+    isEdit? : boolean;
 }
 
 export const TransactionForm = ({
     onSubmit,
     disabled,
-    categoryOptions,
+    // categoryOptions,
     paymentMethodOptions,
+    initialValues,
+    isEdit
 }: Props) => {
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
+        defaultValues: initialValues || {
             date: new Date(),
             itemName: "",
             amount: "",
@@ -136,6 +140,7 @@ export const TransactionForm = ({
                                 onValueChange={field.onChange}
                                 defaultValue={field.value}
                                 disabled={disabled}
+                                required
                             >
                                 <FormControl className="w-full">
                                     <SelectTrigger>
@@ -167,6 +172,8 @@ export const TransactionForm = ({
                                     {...field}
                                     disabled={disabled}
                                     placeholder="Ketik nama item"
+                                    className="text-sm"
+                                    required
                                 />
                             </FormControl>
                             <FormMessage />
@@ -213,6 +220,7 @@ export const TransactionForm = ({
                                     onChange={(option) => field.onChange(option?.value || null)}
                                     onCreateOption={(inputValue) => field.onChange(inputValue)}
                                     isClearable
+                                    required
                                 />
                             </FormControl>
                             <FormMessage />
@@ -239,6 +247,7 @@ export const TransactionForm = ({
                                     decimalsLimit={2}
                                     value={field.value}
                                     onValueChange={(value) => field.onChange(value === undefined ? "" : value)}
+                                    required
                                 />
                             </FormControl>
                             <FormMessage />
@@ -266,7 +275,7 @@ export const TransactionForm = ({
                 />
 
                 <Button className="w-full" disabled={disabled}>
-                    {disabled ? <Loader2 className="size-4 animate-spin" /> : "Buat Transaksi"}
+                    {disabled ? <Loader2 className="size-4 animate-spin" /> : (isEdit? "Simpan Perubahan" : "Buat Transaksi")}
                 </Button>
             </form>
         </Form>

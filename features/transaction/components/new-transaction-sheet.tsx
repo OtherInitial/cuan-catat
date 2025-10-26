@@ -135,7 +135,7 @@ export const NewTransactionSheet = () => {
                         <TransactionForm
                             onSubmit={onSubmit}
                             disabled={isPending} 
-                            categoryOptions={categories}
+                            // categoryOptions={categories}
                             paymentMethodOptions={paymentMethods}
                         />
                     )
