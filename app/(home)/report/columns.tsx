@@ -23,6 +23,7 @@ export type FinancialReport = {
     name: string
   } | null
   paymentMethodId? : string
+  productId?: string | null
 }
 
 export const columns: ColumnDef<FinancialReport>[] = [

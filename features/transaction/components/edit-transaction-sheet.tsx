@@ -51,6 +51,7 @@ export const EditTransactionSheet = () => {
     
     const [categories, setCategories] = useState<Option[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<Option[]>([]);
+    const [products, setProducts] = useState<Option[]>([]);
     const [defaultValues, setDefaultValues] = useState<FormValues | undefined>(undefined);
 
     useEffect(() => {
@@ -67,16 +68,42 @@ export const EditTransactionSheet = () => {
             }
 
             Promise.all([
-                fetch("/api/payment_method", { headers: { "Authorization": `Bearer ${token}` } }),
-                fetch(`/api/transactions/${id}`, { headers: { "Authorization": `Bearer ${token}` } })
+                fetch("/api/payment_method", { 
+                    headers: { 
+                        "Authorization": `Bearer ${token}` 
+                    } 
+                }),
+                fetch(`/api/transactions/${id}`, { 
+                    headers: { 
+                        "Authorization": `Bearer ${token}` 
+                    } 
+                }),
+                fetch("/api/products", { 
+                    headers: { 
+                        "Authorization": `Bearer ${token}` 
+                    } 
+                })
             ])
-            .then(async ([pmRes, txRes]) => {
-                if (!pmRes.ok || !txRes.ok) throw new Error("Gagal mengambil data");
+            .then(async ([pmRes, txRes, prRes]) => {
+                if (!pmRes.ok || !txRes.ok || !prRes) throw new Error("Gagal mengambil data");
                 
                 const paymentMethodsData: ApiData[] = await pmRes.json();
+                const productData: ApiData[] = await prRes.json();
                 const txData: FinancialReport = await txRes.json();
 
-                setPaymentMethods(paymentMethodsData.map(pm => ({ label: pm.name, value: pm.id })));
+                setPaymentMethods(paymentMethodsData.map(pm => (
+                    { 
+                        label: pm.name, 
+                        value: pm.id 
+                    }
+                )));
+
+                setProducts(productData.map(p => (
+                    { 
+                        label: p.name, 
+                        value: p.id 
+                    }
+                ))); 
                 
                 setDefaultValues({
                     date: new Date(txData.date),
@@ -85,6 +112,7 @@ export const EditTransactionSheet = () => {
                     type: txData.type,
                     paymentMethodId: txData.paymentMethodId || "",
                     categoryId: txData.category?.id || null,
+                    productId: txData.productId || null,
                     // note: txData.note || null,
                 });
             })
@@ -95,7 +123,7 @@ export const EditTransactionSheet = () => {
                 setIsLoading(false);
             });
         }
-    }, [isOpen, id]);
+    }, [isOpen, id, onClose]);
 
     const onSubmit = async (values: FormValues) => {
         if (!id) return;
@@ -194,6 +222,7 @@ export const EditTransactionSheet = () => {
                             paymentMethodOptions={paymentMethods}
                             initialValues={defaultValues} 
                             isEdit={true}
+                            productOptions={products}
                         />
                     )}
 

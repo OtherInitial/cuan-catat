@@ -5,6 +5,7 @@ import { NewTransactionSheet } from "@/features/transaction/components/new-trans
 import { ClassificationModal } from "@/features/transaction/components/classification-modal";
 
 import { useEffect, useState } from "react";
+import { RawMaterialSheet } from "@/features/raw-materials/components/raw-material-sheet";
 
 export const SheetProvider = () => {
     const [isMounted, setIsMounted] = useState(false);

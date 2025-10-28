@@ -79,19 +79,19 @@ export function Navbar() {
 
                             <SheetClose asChild>
                                 <Link
-                                    href="/profil"
+                                    href="/produk"
                                     className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
                                 >
-                                    Profil
+                                    Daftar Produk
                                 </Link>
                             </SheetClose>
 
                             <SheetClose asChild>
                                 <Link
-                                    href="/setting"
+                                    href="/profil"
                                     className="text-lg font-medium p-3 rounded-md hover:bg-gray-100 transition-colors"
                                 >
-                                    Daftar Produk
+                                    Profil
                                 </Link>
                             </SheetClose>
                         </nav>

@@ -17,9 +17,15 @@ const patchTransactionSchema = z.object({
     note: z.string().nullable().optional(),
 });
 
-async function verifyTransactionOwner(userId: string, transactionId: string) {
+async function verifyTransactionOwner(
+  userId: string, 
+  transactionId: string
+) {
   const transaction = await prisma.transaction.findFirst({
-    where: { id: transactionId, userId: userId },
+    where: { 
+      id: transactionId, 
+      userId: userId 
+    },
   });
   if (!transaction) {
     throw new Error("Not Found");
@@ -43,10 +49,12 @@ function handleError(error: any) {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } } 
+  context: { params: Promise<{ id: string }> } 
 ) {
   try {
-    const transactionId = context.params.id; 
+    const params = await context.params;
+
+    const transactionId = params.id; 
 
     const authUser = getAuthUser(request);
     
@@ -59,11 +67,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } } 
+  context: { params: Promise<{ id: string }> } 
 ) {
   try {
     const authUser = getAuthUser(request);
-    const transactionId = context.params.id;
+    const params = await context.params;
+
+    const transactionId = params.id;
 
     await verifyTransactionOwner(authUser.id, transactionId);
 
@@ -90,11 +100,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } } 
+  context: { params: Promise<{ id: string }> } 
 ) {
   try {
     const authUser = getAuthUser(request);
-    const transactionId = context.params.id; 
+    const params = await context.params;
+    const transactionId = params.id; 
 
     const transaction = await verifyTransactionOwner(authUser.id, transactionId);
 

@@ -1,52 +1,38 @@
-// app/(home)/produk/page.tsx
+// app/(home)/bahan-baku/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable } from "@/components/ui/data-table"; 
+import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { useNewProductSheet } from "@/features/products/hooks/use-new-product-sheet";
 import { columns } from "./columns";
-import { ProductSheet } from "@/features/products/components/product-sheet"; 
-
-export interface Product {
-    id: string;
-    name: string;
-    sellingPrice: number;
-    hppCalculationType: "MANUAL" | "OTOMATIS";
-    manualHpp: number | null;
-    calculatedHpp: number | null;
-}
+import { RawMaterialSheet } from "@/features/raw-materials/components/raw-material-sheet";
+import { useRawMaterialSheet, RawMaterial } from "@/features/raw-materials/hooks/use-raw-material-sheet";
 
 function getAuthToken(): string | null { 
     if (typeof window !== "undefined") {
         return localStorage.getItem("token");
     }
-    return null;
+    return null; 
  }
 
-export default function ProdukPage() {
-    const [data, setData] = useState<Product[]>([]);
+export default function BahanBakuPage() {
+    const [data, setData] = useState<RawMaterial[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const { onOpen } = useNewProductSheet();
-    const [error, setError] = useState<string | null>(null);
+    const { onOpen } = useRawMaterialSheet(); 
 
     const fetchData = async () => {
         setIsLoading(true);
         const token = getAuthToken();
-        if (!token) { 
-            setError("Otentikasi gagal. Silakan login ulang.");
-            setIsLoading(false);
-            return;
-         }
+        if (!token) { /* ... */ return; }
 
         try {
-            const response = await fetch("/api/products", {
+            const response = await fetch("/api/raw-materials", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error("Gagal mengambil data produk");
-            const result: Product[] = await response.json();
+            if (!response.ok) throw new Error("Gagal mengambil bahan baku");
+            const result: RawMaterial[] = await response.json();
             setData(result);
         } catch (error: any) {
             toast.error(error.message);
@@ -63,17 +49,18 @@ export default function ProdukPage() {
 
     return (
         <>
-            <ProductSheet onReload={onReload} />
+            {/* Sediakan Sheet/Modal di sini */}
+            <RawMaterialSheet onReload={onReload} />
 
             <div className="relative -mt-24 container mx-auto px-4 pb-12">
                 <div className="bg-white p-4 rounded-lg shadow-lg">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-semibold text-gray-800">
-                            Daftar Produk
+                            Bahan Baku
                         </h1>
                         <Button onClick={onOpen}>
                             <Plus className="size-4 mr-2" />
-                            Tambah Produk
+                            Tambah Bahan Baku
                         </Button>
                     </div>
 

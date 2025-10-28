@@ -6,6 +6,7 @@ import { v4 as uuidv4, validate as validateUuid } from 'uuid';
 import { prisma } from '@/lib/prisma';
 import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth-utils';
+import { TransactionType } from '@prisma/client';
 import { createTransactionSchema } from '@/lib/schemas'; 
 
 import { updateFinancialsForMonth } from '@/lib/financial-analytics';
@@ -173,7 +174,8 @@ export async function POST(request: NextRequest) {
         note: data.note,
         categoryId: null,
         paymentMethodId: finalPaymentMethodId,
-        itemMappingId: itemMappingId
+        itemMappingId: itemMappingId,
+        productId: data.productId
       },
       include: {
         category: true,

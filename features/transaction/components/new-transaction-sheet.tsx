@@ -45,6 +45,8 @@ export const NewTransactionSheet = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, setIsPending] = useState(false);
 
+    const [products, setProducts] = useState<Option[]>([]);
+
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
@@ -58,13 +60,42 @@ export const NewTransactionSheet = () => {
                 return;
             }
 
-            fetch("/api/payment_method", { 
-                headers: { "Authorization": `Bearer ${token}` }
-            }).then(res => res.json())
-            .then((paymentMethodsData) => {
-                setPaymentMethods(paymentMethodsData.map((pm: ApiData) => ({ 
-                    label: pm.name, value: pm.id 
-                })));
+            Promise.all([
+                fetch("/api/payment_method", { 
+                    headers: { 
+                        "Authorization": `Bearer ${token}` 
+                    }
+                }),
+                fetch("/api/products", { 
+                    headers: { 
+                        "Authorization": `Bearer ${token}` 
+                    } 
+                })
+            ])
+            .then(async ([pmRes, prodRes]) => {
+                if (!pmRes.ok || !prodRes.ok) throw new Error("Gagal mengambil data default");
+
+                const pmData: ApiData[] = await pmRes.json();
+                
+                const prodData: { 
+                    id: string, 
+                    name: string 
+                }[] = await prodRes.json(); 
+
+                setPaymentMethods(pmData.map(d => (
+                    { 
+                        label: d.name, 
+                        value: d.id 
+                    }
+                )));
+
+                setProducts(prodData.map(p => (
+                    { 
+                        label: p.name, 
+                        value: p.id 
+                    }
+                ))); 
+
             })
             .catch(error => {
                 console.error("Gagal mengambil data:", error);
@@ -73,7 +104,7 @@ export const NewTransactionSheet = () => {
                 setIsLoading(false);
             });
         }
-    }, [isOpen]); 
+    }, [isOpen, onClose]); 
     
     const onSubmit = async (values: FormValues) => {
         setIsPending(true);
@@ -153,6 +184,7 @@ export const NewTransactionSheet = () => {
                             disabled={isPending} 
                             // categoryOptions={categories}
                             paymentMethodOptions={paymentMethods}
+                            productOptions={products}
                         />
                     )
                 }

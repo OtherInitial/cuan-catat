@@ -1,8 +1,20 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Package, Plus, ShoppingBag, TrendingUp } from 'lucide-react';
+import { 
+    Card, 
+    CardContent, 
+    CardDescription, 
+    CardFooter, 
+    CardHeader, 
+    CardTitle 
+} from '@/components/ui/card';
+import { 
+    Loader2, 
+    Package, 
+    ShoppingBag, 
+    TrendingUp 
+} from 'lucide-react';
 import { DashboardChart } from './dashboard-chart';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';

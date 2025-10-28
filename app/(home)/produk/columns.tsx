@@ -21,7 +21,7 @@ export const columns: ColumnDef<Product>[] = [
     },
     {
         id: "hpp",
-        header: "HPP",
+        header: "Modal Produk", //Pengganti istilah HPP
         cell: ({ row }) => {
             const hpp = row.original.hppCalculationType === "MANUAL" 
                 ? row.original.manualHpp 

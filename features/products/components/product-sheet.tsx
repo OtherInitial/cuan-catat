@@ -124,7 +124,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                         </SheetDescription>
                     </SheetHeader>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4 px-4">
                             <FormField name="name" control={form.control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Nama Produk</FormLabel>
@@ -162,7 +162,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                                                 <FormLabel className="font-normal">Manual</FormLabel>
                                             </FormItem>
                                             <FormItem className="flex items-center space-x-2">
-                                                <FormControl><RadioGroupItem value={HppType.AUTOMATIC} /></FormControl>
+                                                <FormControl><RadioGroupItem value={HppType.OTOMATIS} /></FormControl>
                                                 <FormLabel className="font-normal">Hitung Otomatis</FormLabel>
                                             </FormItem>
                                         </RadioGroup>
@@ -193,7 +193,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                                 )} />
                             )}
                             
-                            {hppType === HppType.AUTOMATIC && (
+                            {hppType === HppType.OTOMATIS && (
                                 <div className="space-y-2">
                                     <FormLabel>HPP Otomatis (via Kalkulator)</FormLabel>
                                     <Button type="button" variant="outline" className="w-full" onClick={() => setIsCalculatorOpen(true)}>

@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { TransactionType } from "@prisma/client"; 
 import CreatableSelect from 'react-select/creatable';
 import { CalendarIcon, Loader2 } from "lucide-react";
@@ -13,6 +13,7 @@ import CurrencyInput from 'react-currency-input-field';
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -40,9 +41,8 @@ const formSchema = z.object({
     itemName: z.string().min(1, { message: "Nama item harus diisi" }), 
     amount: z.string().min(1, { message: "Jumlah harus diisi" }), 
     type: z.nativeEnum(TransactionType), 
-    
+    productId: z.string().uuid().optional().nullable(),
     paymentMethodId: z.string().min(1, { message: "Metode pembayaran harus diisi" }),
-    
     categoryId: z.string().optional().nullable(), 
     note: z.string().optional().nullable(), 
 });
@@ -58,6 +58,7 @@ type Props = {
     onSubmit: (values: FormValues) => void;
     disabled: boolean;
     // categoryOptions: Option[];
+    productOptions: Option[];
     paymentMethodOptions: Option[];
     initialValues? : FormValues; 
     isEdit? : boolean;
@@ -67,6 +68,7 @@ export const TransactionForm = ({
     onSubmit,
     disabled,
     // categoryOptions,
+    productOptions,
     paymentMethodOptions,
     initialValues,
     isEdit
@@ -80,13 +82,24 @@ export const TransactionForm = ({
             type: TransactionType.PENGELUARAN, 
             paymentMethodId: undefined,
             categoryId: null,
+            productId: null,
             note: null,
         },
     });
 
+    const watchedType = useWatch({ 
+        control: form.control, 
+        name: 'type' 
+    });
+
     const handleSubmit = (values: FormValues) => {
+        if (values.type !== TransactionType.PEMASUKAN) {
+            values.productId = null;
+        }
         onSubmit(values);
     }
+
+    // console.log(watchedType);
 
     return (
         <Form {...form}>
@@ -180,6 +193,41 @@ export const TransactionForm = ({
                         </FormItem>
                     )}
                 />
+
+                {watchedType === TransactionType.PEMASUKAN && (
+                    <FormField
+                        name="productId"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Produk Terjual (Opsional)</FormLabel>
+                                <Select
+                                    onValueChange={(value) => field.onChange(value || null)} 
+                                    value={field.value ?? ""} 
+                                    disabled={disabled}
+                                >
+                                    <FormControl className="w-full">
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Pilih produk yang terjual..." />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="">-- Bukan Penjualan Produk --</SelectItem> 
+                                        {productOptions.map(option => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                    Pilih jika ini adalah penjualan dari daftar produk Anda.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
                 
                 {/* <FormField
                     name="categoryId"

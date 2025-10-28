@@ -33,6 +33,6 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error) {
-        return new NextResponse(JSON.stringify({ message: "Gagal mengambil status" }), { status: 500 });
+        return new NextResponse(JSON.stringify({ message: "Gagal mengambil status ", error }), { status: 500 });
     }
 }

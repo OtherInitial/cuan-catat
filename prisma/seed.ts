@@ -42,28 +42,28 @@ const itemMappings = [
 async function main() {
   console.log("Mulai proses seeding untuk PaymentMethod...");
 
-  // for (const name of defaultPaymentMethods) {
-  //   const existingMethod = await prisma.paymentMethod.findFirst({
-  //     where: {
-  //       name: name,
-  //       userId: null,
-  //       isDefault: true,
-  //     },
-  //   });
+  for (const name of defaultPaymentMethods) {
+    const existingMethod = await prisma.paymentMethod.findFirst({
+      where: {
+        name: name,
+        userId: null,
+        isDefault: true,
+      },
+    });
 
-  //   if (!existingMethod) {
-  //     await prisma.paymentMethod.create({
-  //       data: {
-  //         name: name,
-  //         userId: null,
-  //         isDefault: true,
-  //       },
-  //     });
-  //     console.log(`Metode default '${name}' telah dibuat.`);
-  //   } else {
-  //     console.log(`Metode default '${name}' sudah ada.`);
-  //   }
-  // }
+    if (!existingMethod) {
+      await prisma.paymentMethod.create({
+        data: {
+          name: name,
+          userId: null,
+          isDefault: true,
+        },
+      });
+      console.log(`Metode default '${name}' telah dibuat.`);
+    } else {
+      console.log(`Metode default '${name}' sudah ada.`);
+    }
+  }
 
   for (const item of itemMappings) {
     await prisma.itemMapping.upsert({

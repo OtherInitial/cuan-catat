@@ -10,7 +10,7 @@ const updateMappingSchema = z.object({
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     let authUser;
     try {
@@ -22,6 +22,8 @@ export async function PATCH(
     try {
         const body = await req.json();
         const data = updateMappingSchema.parse(body);
+
+        const params = await context.params;
         const id = parseInt(params.id); 
 
         if (isNaN(id)) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth-utils';
-import { TransactionType } from '@prisma/client';
+import { TransactionType, HppType } from '@prisma/client';
 
 const getProfitStatus = (profitMargin: number) => {
     if (profitMargin <= 0) return { text: "Rugi", color: "🔴" };
@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
                 id: true, 
                 name: true, 
                 sellingPrice: true, 
-                costOfGoodSold: true 
+                hppCalculationType: true,
+                manualHpp: true,
+                calculatedHpp: true 
             }
         });
 
@@ -44,16 +46,20 @@ export async function GET(req: NextRequest) {
                 type: TransactionType.PEMASUKAN,
                 productId: { not: null }
             },
-            _count: { _all: true }, 
+            _count: { id: true }, 
             _sum: { amount: true }, 
         });
 
         const summary = products.map(product => {
             const sale = salesData.find(s => s.productId === product.id);
 
-            const unitsSold = sale?._count._all || 0;
+            const unitsSold = sale?._count.id || 0;
             const revenue = sale?._sum.amount?.toNumber() || 0;
-            const hppPerUnit = product.costOfGoodSold.toNumber();
+            const hppValue = product.hppCalculationType === HppType.MANUAL
+                ? product.manualHpp
+                : product.calculatedHpp; 
+            
+            const hppPerUnit = hppValue?.toNumber() || 0;
             const sellingPrice = product.sellingPrice.toNumber();
             const profitPerUnit = sellingPrice - hppPerUnit;
             const totalProfit = profitPerUnit * unitsSold;

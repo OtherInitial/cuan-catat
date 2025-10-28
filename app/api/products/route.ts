@@ -83,8 +83,8 @@ export async function POST(req: NextRequest) {
                 manualHpp: finalManualHpp,
                 calculatedHpp: finalCalculatedHpp,
                 userId: authUser.id,
-                // Buat relasi resep jika tipenya otomatis
-                materials: data.hppCalculationType === HppType.AUTOMATIC 
+                
+                materials: data.hppCalculationType === HppType.OTOMATIS
                     ? {
                         createMany: {
                             data: data.recipe!.map(r => ({
