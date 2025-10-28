@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Loader2, Save, User, Mail, Phone, Home } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+
+import { Loader2, Save, User, Mail, Phone, Home, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,9 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -101,6 +105,58 @@ export default function ProfilePage() {
         }
     };
 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            toast.error("File harus berupa gambar (jpg, png, webp).");
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("Ukuran file maksimal adalah 2MB.");
+            return;
+        }
+
+        setIsUploading(true);
+        const token = getAuthToken();
+        if (!token) {
+            toast.error("Sesi tidak valid.");
+            setIsUploading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/profile/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-filename': file.name, 
+                },
+                body: file, 
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || "Gagal mengunggah gambar");
+            }
+
+            const blob = await response.json();
+
+            setProfile(prev => (prev ? { ...prev, avatarUrl: blob.url } : null));
+            toast.success("Foto profil diubah. Tekan 'Simpan Perubahan' untuk konfirmasi.");
+
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-[60vh]">
@@ -126,25 +182,60 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         
                         <div className="flex items-center space-x-4">
-                            <Avatar className="h-20 w-20">
-                                <AvatarImage src={profile.avatarUrl || ''} alt={profile.name} />
-                                <AvatarFallback>
-                                    {profile.name?.substring(0, 2).toUpperCase() || <User />}
-                                </AvatarFallback>
-                            </Avatar>
+                            <label 
+                                htmlFor="avatarFile" 
+                                className="relative cursor-pointer rounded-full"
+                            >
+                                <Avatar className="h-20 w-20">
+                                    <AvatarImage src={profile.avatarUrl || ''} alt={profile.name} />
+                                    <AvatarFallback>
+                                        {profile.name?.substring(0, 2).toUpperCase() || <User />}
+                                    </AvatarFallback>
+                                </Avatar>
+                                
+                                {isUploading && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                    </div>
+                                )}
+                                
+                                {!isUploading && (
+                                     <div className="absolute bottom-0 right-0 p-1 bg-white rounded-full shadow border">
+                                        <Upload className="h-4 w-4 text-gray-700" />
+                                    </div>
+                                )}
+                            </label>
+                            
+                            <input 
+                                ref={fileInputRef}
+                                id="avatarFile"
+                                type="file"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/png, image/jpeg, image/webp"
+                                disabled={isUploading}
+                            />
+                            
                             <div className="flex-grow space-y-1">
-                                <Label htmlFor="avatarUrl">URL Avatar</Label>
-                                <Input 
-                                    id="avatarUrl" 
-                                    name="avatarUrl"
-                                    value={profile.avatarUrl || ''} 
-                                    onChange={handleChange}
-                                    placeholder="https://.../gambar.png" 
-                                />
+                                <Label>Perbarui Foto Profil</Label>
+                                <p className="text-sm text-gray-500">
+                                    Klik pada gambar untuk memilih file baru (Maks 2MB).
+                                </p>
                             </div>
                         </div>
                         
-                        {/* Nama */}
+                        <div className="space-y-1">
+                            <Label htmlFor="avatarUrl">URL Avatar (Otomatis)</Label>
+                            <Input 
+                                id="avatarUrl" 
+                                name="avatarUrl"
+                                value={profile.avatarUrl || ''} 
+                                onChange={handleChange}
+                                placeholder="Akan terisi otomatis setelah upload..." 
+                                readOnly={isUploading} 
+                            />
+                        </div>
+                        
                         <div className="space-y-2">
                             <Label htmlFor="name">Nama Lengkap</Label>
                             <Input 
@@ -156,7 +247,6 @@ export default function ProfilePage() {
                             />
                         </div>
                         
-                        {/* Email */}
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input 
@@ -169,7 +259,6 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        {/* Telepon */}
                         <div className="space-y-2">
                             <Label htmlFor="phone">Nomor Telepon</Label>
                             <Input 
@@ -182,7 +271,6 @@ export default function ProfilePage() {
                             />
                         </div>
                         
-                        {/* Alamat */}
                         <div className="space-y-2">
                             <Label htmlFor="address">Alamat</Label>
                             <Input 

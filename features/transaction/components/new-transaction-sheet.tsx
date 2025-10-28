@@ -8,6 +8,7 @@ import {
     SheetDescription 
 } from "@/components/ui/sheet";
 import { useNewTransaction } from "@/features/transaction/hooks/use-new-transaction";
+import { useClassificationModal } from "@/features/transaction/hooks/use-classification-modal";
 
 import { TransactionForm, type FormValues } from "@/features/transaction/components/transaction-form";
 import { Loader2 } from "lucide-react";
@@ -35,6 +36,8 @@ function getAuthToken(): string | null {
 export const NewTransactionSheet = () => {
     const router = useRouter();
     const { isOpen, onClose } = useNewTransaction();
+    
+    const { onOpen: onClassificationOpen } = useClassificationModal();
     
     const [categories, setCategories] = useState<Option[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<Option[]>([]);
@@ -97,12 +100,25 @@ export const NewTransactionSheet = () => {
                 body: JSON.stringify(apiValues),
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || "Gagal membuat transaksi");
             }
             
-            onClose();            
+            if (response.status === 201) {
+                toast.success("Transaksi berhasil dibuat!");
+                onClose();
+            } else if (response.status === 202 && result.status === "NEEDS_CLASSIFICATION") {
+                toast.info(`Item baru "${result.itemName}" perlu diklasifikasi.`);
+                
+                onClassificationOpen(result.itemName, result.transactionId); 
+                
+                onClose();
+            } else {
+                throw new Error("Menerima respons tidak terduga dari server.");
+            }      
         } catch (error: any) {
             console.error(error);
             // toast.error(error.message);

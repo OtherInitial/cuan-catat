@@ -255,7 +255,7 @@ export const TransactionForm = ({
                     )}
                 />
 
-                <FormField
+                {/* <FormField
                     name="note"
                     control={form.control}
                     render={({ field }) => (
@@ -272,7 +272,7 @@ export const TransactionForm = ({
                             <FormMessage />
                         </FormItem>
                     )}
-                />
+                /> */}
 
                 <Button className="w-full" disabled={disabled}>
                     {disabled ? <Loader2 className="size-4 animate-spin" /> : (isEdit? "Simpan Perubahan" : "Buat Transaksi")}

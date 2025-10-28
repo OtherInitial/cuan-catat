@@ -7,6 +7,52 @@ datasource db {
   url      = env("DIRECT_URL")
 }
 
+model RawMaterial {
+  id          String  @id @default(uuid())
+  name        String
+  unit        String
+  costPerUnit Decimal @db.Decimal(12, 2)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productMaterials ProductMaterial[]
+
+  @@unique([name, userId])
+}
+
+model ProductMaterial {
+  id String @id @default(uuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  rawMaterialId String
+  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id], onDelete: Restrict)
+
+  quantity Float
+}
+
+model Product {
+  id           String  @id @default(uuid())
+  name         String
+  sellingPrice Decimal @db.Decimal(12, 2)
+
+  hppCalculationType HppType @default(MANUAL)
+
+  manualHpp Decimal? @db.Decimal(12, 2)
+
+  calculatedHpp Decimal? @db.Decimal(12, 2)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+  materials    ProductMaterial[]
+
+  @@unique([name, userId])
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -23,6 +69,8 @@ model User {
   transactions  Transaction[]
   PaymentMethod PaymentMethod[]
   Category      Category[]
+  products      Product[]
+  RawMaterial   RawMaterial[]
 }
 
 model Category {
@@ -68,6 +116,9 @@ model Transaction {
   user            User            @relation(fields: [userId], references: [id])
   ItemMapping     ItemMapping?    @relation(fields: [itemMappingId], references: [id])
   itemMappingId   Int?
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([userId, date])
 }
@@ -127,6 +178,8 @@ model SummaryMonthly {
   financialIndicators FinancialIndicators? @relation(name: "SummaryToIndicators")
 
   user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month])
 }
 
 enum GroupType {
@@ -150,4 +203,9 @@ enum CashflowStatus {
   SEHAT
   WASPADA
   KRITIS
+}
+
+enum HppType {
+  MANUAL
+  AUTOMATIC
 }

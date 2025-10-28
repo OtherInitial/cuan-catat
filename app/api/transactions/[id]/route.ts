@@ -3,9 +3,19 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-utils';
-import { createTransactionSchema } from '@/lib/schemas'; 
+import { updateFinancialsForMonth } from '@/lib/financial-analytics';
+import { TransactionType } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
-const updateTransactionSchema = createTransactionSchema.partial();
+const patchTransactionSchema = z.object({
+    date: z.string().datetime().optional(),
+    itemName: z.string().min(1).optional(),
+    amount: z.number().positive().optional(), 
+    type: z.nativeEnum(TransactionType).optional(),
+    paymentMethodId: z.string().uuid().optional(),
+    categoryId: z.string().uuid().nullable().optional(),
+    note: z.string().nullable().optional(),
+});
 
 async function verifyTransactionOwner(userId: string, transactionId: string) {
   const transaction = await prisma.transaction.findFirst({
@@ -33,11 +43,10 @@ function handleError(error: any) {
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } } 
 ) {
   try {
-    const params = await context.params; // Await params
-    const transactionId = params.id;
+    const transactionId = context.params.id; 
 
     const authUser = getAuthUser(request);
     
@@ -50,28 +59,29 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } } 
 ) {
   try {
-    const params = await context.params; // Await params
     const authUser = getAuthUser(request);
+    const transactionId = context.params.id;
 
-    await verifyTransactionOwner(authUser.id, params.id);
+    await verifyTransactionOwner(authUser.id, transactionId);
 
     const body = await request.json();
-
-    const data = updateTransactionSchema.parse(body);
+    const data = patchTransactionSchema.parse(body); 
 
     const updatedTransaction = await prisma.transaction.update({
       where: {
-        id: params.id,
+        id: transactionId,
       },
       data: {
         ...data,
-        amount: data.amount ? data.amount : undefined,
+        amount: data.amount ? new Decimal(data.amount) : undefined,
         date: data.date ? new Date(data.date) : undefined,
       },
     });
+
+    updateFinancialsForMonth(authUser.id, updatedTransaction.date);
     return NextResponse.json(updatedTransaction);
   } catch (error: any) {
     return handleError(error);
@@ -80,19 +90,22 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } } 
 ) {
   try {
-    const params = await context.params; // Await params
     const authUser = getAuthUser(request);
+    const transactionId = context.params.id; 
 
-    await verifyTransactionOwner(authUser.id, params.id);
+    const transaction = await verifyTransactionOwner(authUser.id, transactionId);
 
     await prisma.transaction.delete({
       where: {
-        id: params.id,
+        id: transactionId,
       },
     });
+
+    updateFinancialsForMonth(authUser.id, transaction.date); 
+    
     return new NextResponse(null, { status: 204 }); 
   } catch (error: any) {
     return handleError(error);

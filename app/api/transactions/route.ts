@@ -4,8 +4,11 @@ import type { NextRequest } from 'next/server';
 import { v4 as uuidv4, validate as validateUuid } from 'uuid';
 
 import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth-utils';
 import { createTransactionSchema } from '@/lib/schemas'; 
+
+import { updateFinancialsForMonth } from '@/lib/financial-analytics';
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,6 +83,15 @@ export async function POST(request: NextRequest) {
     console.log("checking body: ", body);
 
     const data = createTransactionSchema.parse(body);
+
+    let itemMappingId: number | undefined = undefined;
+    const existingMapping = await db.itemMapping.findUnique({
+        where: { itemName: data.itemName }
+    });
+
+    if (existingMapping) {
+        itemMappingId = existingMapping.id;
+    }
 
     // let finalCategoryId = data.categoryId;
 
@@ -161,6 +173,7 @@ export async function POST(request: NextRequest) {
         note: data.note,
         categoryId: null,
         paymentMethodId: finalPaymentMethodId,
+        itemMappingId: itemMappingId
       },
       include: {
         category: true,
@@ -168,7 +181,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(newTransaction, { status: 201 });
+    updateFinancialsForMonth(authUser.id, newTransaction.date);
+
+    if (itemMappingId) {
+        return NextResponse.json(newTransaction, { status: 201 });
+    } else {
+        return NextResponse.json(
+            { 
+                status: "NEEDS_CLASSIFICATION", 
+                transactionId: newTransaction.id, 
+                itemName: newTransaction.itemName 
+            }, 
+            { status: 202 }
+        );
+    }
+
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ 

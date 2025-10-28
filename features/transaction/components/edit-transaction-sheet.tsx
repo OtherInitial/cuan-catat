@@ -1,5 +1,16 @@
 "use client";
 
+import { toast } from "sonner";
+import { Loader2, Trash } from "lucide-react";
+import { useState, useEffect } from "react";
+
+import { 
+    TransactionForm, 
+    type FormValues 
+} from "./transaction-form";
+import { useConfirm } from "@/hooks/use-confirm";
+import { FinancialReport } from "@/app/(home)/report/columns";
+
 import { 
     Sheet,
     SheetTitle,
@@ -7,16 +18,18 @@ import {
     SheetContent,
     SheetDescription 
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Loader2, Trash } from "lucide-react";
-import { toast } from "sonner";
-import { useState, useEffect } from "react";
 import { useEditTransaction } from "@/features/transaction/hooks/use-edit-transaction";
-import { TransactionForm, type FormValues } from "./transaction-form";
-import { FinancialReport } from "@/app/(home)/report/columns";
+import { Button } from "@/components/ui/button";
 
-type Option = { label: string; value: string; }
-type ApiData = { id: string; name: string; }
+type Option = { 
+    label: string; 
+    value: string; 
+}
+
+type ApiData = { 
+    id: string; 
+    name: string; 
+}
 
 function getAuthToken(): string | null {
     if (typeof window !== "undefined") {
@@ -27,6 +40,11 @@ function getAuthToken(): string | null {
 
 export const EditTransactionSheet = () => {
     const { id, isOpen, onClose } = useEditTransaction();
+
+    const [ConfirmDialog, confirm] = useConfirm(
+        "Konfirmasi Hapus",
+        "Apakah Anda yakin ingin menghapus transaksi ini?"
+    );
     
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, setIsPending] = useState(false);
@@ -117,9 +135,16 @@ export const EditTransactionSheet = () => {
 
     const onDelete = async () => {
         if (!id) return;
-        if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+
+        const ok = await confirm();
+
+        if (!ok) {
             return;
         }
+
+        // if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+        //     return;
+        // }
 
         setIsPending(true);
         const token = getAuthToken();
@@ -150,37 +175,40 @@ export const EditTransactionSheet = () => {
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent className="space-y-1">
-                <SheetHeader>
-                    <SheetTitle>Edit Transaksi</SheetTitle>
-                    <SheetDescription>Update atau hapus transaksi ini.</SheetDescription>
-                </SheetHeader>
-                {isLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="size-4 animate-spin text-muted-foreground"/>
-                    </div>
-                ) : (
-                    <TransactionForm
-                        onSubmit={onSubmit}
-                        disabled={isPending}
-                        paymentMethodOptions={paymentMethods}
-                        initialValues={defaultValues} 
-                        isEdit={true}
-                    />
-                )}
+        <>
+            <ConfirmDialog/>
+            <Sheet open={isOpen} onOpenChange={onClose}>
+                <SheetContent className="space-y-1">
+                    <SheetHeader>
+                        <SheetTitle>Edit Transaksi</SheetTitle>
+                        <SheetDescription>Update atau hapus transaksi ini.</SheetDescription>
+                    </SheetHeader>
+                    {isLoading ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="size-4 animate-spin text-muted-foreground"/>
+                        </div>
+                    ) : (
+                        <TransactionForm
+                            onSubmit={onSubmit}
+                            disabled={isPending}
+                            paymentMethodOptions={paymentMethods}
+                            initialValues={defaultValues} 
+                            isEdit={true}
+                        />
+                    )}
 
-                {/* <div className="w-full px-4">
-                    <Button
-                        variant="outline"
-                        className="w-full text-red-500 hover:text-red-600"
-                        disabled={isPending}
-                        onClick={onDelete}
-                    >
-                        <Trash className="size-4 mr-2" /> Hapus Transaksi Ini
-                </Button>
-                </div> */}
-            </SheetContent>
-        </Sheet>
+                    <div className="w-full px-4">
+                        <Button
+                            variant="outline"
+                            className="w-full text-red-500 hover:text-red-600"
+                            disabled={isPending}
+                            onClick={onDelete}
+                        >
+                            <Trash className="size-4 mr-2" /> Hapus Transaksi Ini
+                        </Button>
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </>
     );
 }

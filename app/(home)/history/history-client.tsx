@@ -92,11 +92,7 @@ export const HistoryClient = () => {
     }
 
     return (
-        <>
-         <Status 
-            status="Aman"
-         />
-         <div className="bg-white shadow-xl rounded-xl p-5 absolute -mt-12 left-5 right-5 space-y-5">
+         <div className="bg-white shadow-xl rounded-xl p-5 absolute mt-12 left-5 right-5 space-y-5">
             <h1 className="font-semibold text-2xl">Riwayat Keuangan</h1>
 
             <div className="flex items-center space-x-3 overflow-x-auto pb-2">
@@ -131,7 +127,5 @@ export const HistoryClient = () => {
                 )}
             </div>
         </div>
-        </>
-        
     );
 }

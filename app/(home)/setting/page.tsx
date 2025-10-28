@@ -14,10 +14,10 @@ export default function SettingPage (){
             title: "Kalkulator HPP",
             link: "/kalkulator-hpp"
         },
-        {
-            title: "Penyimpanan Data",
-            link: "/penyimpanan-data"
-        }
+        // {
+        //     title: "Penyimpanan Data",
+        //     link: "/penyimpanan-data"
+        // }
     ]
 
 
@@ -30,20 +30,14 @@ export default function SettingPage (){
             <div className="grid grid-cols-1 gap-2">
                 {
                     listSetting.map((val, idx) => (
-                        <div key={idx} className="rounded-lg p-6 shadow-lg hover:scale-100">
-                            <Link 
-                            href={val.link}
-                            className="w-full font-medium"
-                            >
+                        <Link href={val.link} key={idx} className="font-medium">
+                            <div key={idx} className="rounded-lg p-6 shadow-lg hover:scale-100">
                                 {val.title}
-                            </Link>
-                            
-                        </div>
+                            </div>
+                        </Link>
                     ))
                 }
             </div>
-
-            
         </div>
     )
 }

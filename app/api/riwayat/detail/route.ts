@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth-utils'; 
-import { TransactionType } from '@prisma/client';
+import { CashflowStatus, TransactionType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const MONTH_INDEX_MAP: { [key: string]: number } = {
@@ -106,13 +106,23 @@ export async function GET(req: NextRequest) {
         const pengeluaranPercent = calculatePercentChange(currentStats.pengeluaran, prevStats.pengeluaran);
         
         // 7. Tentukan Kondisi Keuangan
-        let kondisi = "Aman";
-        if (currentStats.saldo < 0) kondisi = "Minus";
-        else if (currentStats.pengeluaran > currentStats.pemasukan * 0.75) kondisi = "Waspada";
+        let kondisi : string;
+        let statusEnum: CashflowStatus;
 
-        // 8. Susun Respons
+        if (currentStats.saldo < 0) {
+            kondisi = "Kritis";
+            statusEnum = CashflowStatus.KRITIS; 
+        } else if (currentStats.pengeluaran > currentStats.pemasukan * 0.75) {
+            kondisi = "Waspada"; 
+            statusEnum = CashflowStatus.WASPADA; 
+        } else {
+            kondisi = "Aman";
+            statusEnum = CashflowStatus.SEHAT; 
+        }
+
         const responseData = {
             kondisi: kondisi,
+            statusEnum: statusEnum,
             saldo: currentStats.saldo,
             saldoPercent: saldoPercent,
             pemasukan: currentStats.pemasukan,

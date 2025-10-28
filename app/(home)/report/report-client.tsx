@@ -245,9 +245,9 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         onClick={onNewOpen} 
                         className="w-full md:w-auto"
                     >
-                        + Buat Laporan
+                        + Tambah Data
                     </Button>
-                    <Button 
+                    {/* <Button 
                         className="w-full md:w-auto"
                         onClick={handleUploadClick} 
                         disabled={isUploading || isLoading} 
@@ -256,7 +256,7 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
                             <Loader2 className="mr-2 size-4 animate-spin" />
                         ) : null}
                         {isUploading ? "Mengunggah..." : "Unggah Excel"}
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 

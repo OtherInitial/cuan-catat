@@ -5,9 +5,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { TransactionChart } from './transaction-chart'; 
+import { CashflowStatus } from '@prisma/client';
+import { cn } from '@/lib/utils';
 
 interface HistoryDetail {
     kondisi: string;
+    statusEnum: CashflowStatus;
     saldo: number;
     saldoPercent: number;
     pemasukan: number;
@@ -59,6 +62,12 @@ const PercentDisplay = ({ value }: { value: number }) => {
             {formattedValue} dari bulan sebelumnya
         </p>
     );
+};
+
+const statusMap = {
+    [CashflowStatus.SEHAT]: "from-green-400 to-green-600",
+    [CashflowStatus.WASPADA]: "from-yellow-400 to-yellow-600",
+    [CashflowStatus.KRITIS]: "from-red-400 to-red-600",
 };
 
 export default function DetailRiwayatPage() {
@@ -136,9 +145,15 @@ export default function DetailRiwayatPage() {
         return <div className="p-6">Data tidak ditemukan.</div>;
     }
 
+    const backgroundClass = statusMap[data.statusEnum] || statusMap[CashflowStatus.SEHAT];
+
     return (
         <div className="min-h-screen bg-gray-50 pb-12">
-            <div className="bg-gradient-to-br from-green-400 to-green-600 text-white px-6 pt-16 pb-24 rounded-b-3xl shadow-md">
+            <div className={cn(
+                "text-white px-6 pt-16 pb-32 rounded-b-2xl shadow-md",
+                "bg-gradient-to-br", 
+                backgroundClass      
+            )}>
                 <h1 className="text-2xl font-semibold">{pageTitle}</h1>
                 <p className="text-lg opacity-90 mt-1">
                     Kondisi keuanganmu: <span className="font-semibold">{data.kondisi}</span>
@@ -158,14 +173,14 @@ export default function DetailRiwayatPage() {
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
                     <Card className="shadow-lg border-none">
                         <CardHeader>
                             <CardTitle className="text-base font-medium text-gray-600">Pemasukan</CardTitle>
                             <p className="text-sm text-gray-500">{dateRange}</p>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.pemasukan)}</p>
+                            <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pemasukan)}</p>
                             <PercentDisplay value={data.pemasukanPercent} />
                         </CardContent>
                     </Card>
@@ -176,7 +191,7 @@ export default function DetailRiwayatPage() {
                             <p className="text-sm text-gray-500">{dateRange}</p>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.pengeluaran)}</p>
+                            <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pengeluaran)}</p>
                             <PercentDisplay value={data.pengeluaranPercent} />
                         </CardContent>
                     </Card>

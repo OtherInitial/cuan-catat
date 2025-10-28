@@ -90,6 +90,7 @@ export default function Home() {
               type="email"
               placeholder="Masukkan email disini"
               value={email}
+              className="text-black"
               onChange={(e) => setEmail(e.target.value)}
               required
             />
