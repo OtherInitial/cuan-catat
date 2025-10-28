@@ -100,7 +100,6 @@ export const TransactionForm = ({
         name: 'productId'
     });
 
-    // Auto-fill itemName when product is selected
     useEffect(() => {
         if (isProductMode && watchedProductId) {
             const selectedProduct = productOptions.find(opt => opt.value === watchedProductId);
@@ -110,14 +109,12 @@ export const TransactionForm = ({
         }
     }, [watchedProductId, isProductMode, productOptions, form]);
 
-    // Reset product when switching modes
     useEffect(() => {
         if (!isProductMode) {
             form.setValue('productId', null);
         }
     }, [isProductMode, form]);
 
-    // Reset product mode when switching to PENGELUARAN
     useEffect(() => {
         if (watchedType !== TransactionType.PEMASUKAN) {
             setIsProductMode(false);
@@ -126,7 +123,7 @@ export const TransactionForm = ({
 
     const handleSubmit = (values: FormValues) => {
         if (values.type !== TransactionType.PEMASUKAN) {
-            values.productId = "";
+            values.productId = "none";
         }
         onSubmit(values);
     }
@@ -260,6 +257,7 @@ export const TransactionForm = ({
                                 <FormControl>
                                     <Input
                                         {...field}
+                                        value={field.value || ""}
                                         disabled={disabled}
                                         placeholder="Ketik nama item"
                                         className="text-sm"

@@ -171,7 +171,7 @@ export default function ProfilePage() {
 
     return (
         <div className="p-4 md:p-8">
-            <h1 className="font-semibold text-2xl mb-4">Profil Saya</h1>
+            <h1 className="font-semibold text-2xl mb-4">Profil UMKM</h1>
             
             <Card className="max-w-3xl mx-auto shadow-lg">
                 <form onSubmit={handleSubmit}>

@@ -1,63 +1,92 @@
 "use client";
 
 import { z } from "zod";
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { HppType } from "@prisma/client";
-import { Loader2, Calculator } from "lucide-react";
 import { toast } from "sonner";
-import { useEditHppSheet, ProductForHppEdit } from "../hooks/use-edit-hpp-sheet";
-import { HppCalculatorModal, RecipeItem } from "./hpp-calculator-modal"; 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { HppType } from "@prisma/client";
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { Loader2, Calculator } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import CurrencyInput from 'react-currency-input-field';
 
-// Skema HANYA untuk form ini
+import { 
+    HppCalculatorModal, 
+    RecipeItem 
+} from "./hpp-calculator-modal"; 
+import { 
+    useEditHppSheet, 
+    ProductForHppEdit 
+} from "../hooks/use-edit-hpp-sheet";
+
+import { 
+    Sheet, 
+    SheetContent, 
+    SheetHeader, 
+    SheetTitle, 
+    SheetDescription, 
+    SheetFooter 
+} from "@/components/ui/sheet";
+import { 
+    Form, 
+    FormControl, 
+    FormField, 
+    FormItem, 
+    FormLabel, 
+    FormMessage, 
+    FormDescription 
+} from "@/components/ui/form";
+import { 
+    RadioGroup, 
+    RadioGroupItem 
+} from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
 const formSchema = z.object({
     hppCalculationType: z.nativeEnum(HppType),
     manualHpp: z.string().optional().nullable(),
 });
+
 type FormValues = z.input<typeof formSchema>;
+
 function getAuthToken(): string | null { 
     if (typeof window !== "undefined") {
         return localStorage.getItem("token");
     }
     return null;
- }
+}
 
 export const EditHppSheet = ({ onReload }: { onReload: () => void }) => {
     const { isOpen, onClose, data } = useEditHppSheet();
     const [isPending, setIsPending] = useState(false);
     
-    // State kalkulator
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-    // State untuk menyimpan resep BARU dari kalkulator
     const [currentRecipe, setCurrentRecipe] = useState<RecipeItem[]>([]);
-    // State untuk HPP BARU dari kalkulator
     const [currentCalculatedHpp, setCurrentCalculatedHpp] = useState<number | null>(null);
+
+    const [currentProductionYield, setCurrentProductionYield] = useState<number>(1);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
     });
 
-    // Isi form & state resep saat modal terbuka
     useEffect(() => {
         if (data) {
             form.reset({
                 hppCalculationType: data.hppCalculationType,
                 manualHpp: data.manualHpp?.toString() || null,
             });
-            setCurrentRecipe(data.recipe || []); // Isi resep awal
-            setCurrentCalculatedHpp(data.calculatedHpp); // Isi HPP awal
+            setCurrentRecipe(data.recipe || []); 
+            setCurrentCalculatedHpp(data.calculatedHpp); 
+            setCurrentProductionYield(data.productionYield || 1); 
         } else {
-            // Reset saat ditutup
-            form.reset({ hppCalculationType: HppType.MANUAL, manualHpp: null });
+            form.reset({ 
+                hppCalculationType: HppType.MANUAL, 
+                manualHpp: null 
+            });
             setCurrentRecipe([]);
             setCurrentCalculatedHpp(null);
+            setCurrentProductionYield(1); 
         }
     }, [data, form]);
 
@@ -70,14 +99,19 @@ export const EditHppSheet = ({ onReload }: { onReload: () => void }) => {
         if (!token) { /* ... */ return; }
 
         const apiData = {
-            // Kita hanya mengirim data HPP
             hppCalculationType: values.hppCalculationType,
-            manualHpp: values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null,
-            recipe: currentRecipe, // Kirim resep terbaru dari state
+            manualHpp: values.hppCalculationType === HppType.MANUAL 
+                ? (values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null)
+                : null,
+
+            recipe: values.hppCalculationType === HppType.OTOMATIS ? currentRecipe : null,
+            productionYield: values.hppCalculationType === HppType.OTOMATIS ? currentProductionYield : null,
+
+            calculatedHpp: values.hppCalculationType === HppType.OTOMATIS ? currentCalculatedHpp : null,
         };
         
         try {
-            const response = await fetch(`/api/products/${data.id}`, { // Gunakan ID produk
+            const response = await fetch(`/api/products/${data.id}`, { 
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify(apiData)
@@ -99,20 +133,21 @@ export const EditHppSheet = ({ onReload }: { onReload: () => void }) => {
         }
     };
 
-    const onCalculatorSave = (newRecipe: RecipeItem[], newHpp: number) => {
+    const onCalculatorSave = (newRecipe: RecipeItem[], newHppPerUnit: number, newYield: number) => {
         setCurrentRecipe(newRecipe);
-        setCurrentCalculatedHpp(newHpp);
+        setCurrentCalculatedHpp(newHppPerUnit); 
+        setCurrentProductionYield(newYield); 
         setIsCalculatorOpen(false);
     };
     
     return (
         <>
-            {/* Kalkulator tetap sama */}
             <HppCalculatorModal 
                 isOpen={isCalculatorOpen}
                 onClose={() => setIsCalculatorOpen(false)}
                 onSave={onCalculatorSave}
-                initialRecipe={currentRecipe} // Kirim resep dari state ini
+                initialRecipe={currentRecipe} 
+                initialYield={currentProductionYield} 
             />
         
             <Sheet open={isOpen} onOpenChange={onClose}>
@@ -145,7 +180,6 @@ export const EditHppSheet = ({ onReload }: { onReload: () => void }) => {
                                 </FormItem>
                             )} />
 
-                            {/* --- Bagian HPP Dinamis --- */}
                             {hppType === HppType.MANUAL && (
                                 <FormField name="manualHpp" control={form.control} render={({ field }) => (
                                     <FormItem>

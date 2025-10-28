@@ -16,6 +16,7 @@ const productSchema = z.object({
     hppCalculationType: z.nativeEnum(HppType),
     manualHpp: z.number().optional().nullable(),
     recipe: z.array(recipeItemSchema).optional().nullable(),
+    calculatedHpp: z.number().nullable()
 });
 
 export async function GET(req: NextRequest) {
@@ -40,11 +41,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     let authUser;
     try { authUser = getAuthUser(req); } 
-    catch (error: any) { return new NextResponse(JSON.stringify({ message: error.message }), { status: 401 }); }
+    catch (error: any) { 
+        return new NextResponse(JSON.stringify({ 
+            message: error.message 
+        }), { status: 401 }); 
+    }
 
     try {
         const body = await req.json();
         const data = productSchema.parse(body);
+        console.log(data);
 
         let finalManualHpp: Decimal | null = null;
         let finalCalculatedHpp: Decimal | null = null;
@@ -81,7 +87,7 @@ export async function POST(req: NextRequest) {
                 sellingPrice: new Decimal(data.sellingPrice),
                 hppCalculationType: data.hppCalculationType,
                 manualHpp: finalManualHpp,
-                calculatedHpp: finalCalculatedHpp,
+                calculatedHpp: data.calculatedHpp,
                 userId: authUser.id,
                 
                 materials: data.hppCalculationType === HppType.OTOMATIS

@@ -1,15 +1,15 @@
 import { create } from "zustand";
 import { HppType } from "@prisma/client";
-import { RecipeItem } from "../components/hpp-calculator-modal"; // Ambil tipe dari kalkulator
+import { RecipeItem } from "../components/hpp-calculator-modal"; 
 
-// Tipe data produk yang akan diedit HPP-nya
 export interface ProductForHppEdit {
     id: string;
     name: string;
     hppCalculationType: HppType;
     manualHpp: number | null;
     calculatedHpp: number | null;
-    recipe: RecipeItem[]; // Resep awal
+    recipe: RecipeItem[]; 
+    productionYield: number;
 }
 
 type EditHppSheetState = {

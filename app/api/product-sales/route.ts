@@ -39,19 +39,19 @@ export async function GET(req: NextRequest) {
         });
 
         const salesData = await db.transaction.groupBy({
-            by: ['productId'],
+            by: ['itemName'], 
             where: {
                 userId: authUser.id,
                 date: { gte: startDate, lt: endDate },
                 type: TransactionType.PEMASUKAN,
-                productId: { not: null }
             },
             _count: { id: true }, 
             _sum: { amount: true }, 
         });
 
         const summary = products.map(product => {
-            const sale = salesData.find(s => s.productId === product.id);
+            const trimmedProductName = product.name.trim();
+            const sale = salesData.find(s => s.itemName.trim() === trimmedProductName);
 
             const unitsSold = sale?._count.id || 0;
             const revenue = sale?._sum.amount?.toNumber() || 0;
@@ -78,7 +78,9 @@ export async function GET(req: NextRequest) {
             };
         });
 
-        const sortedSummary = summary.sort((a, b) => b.unitsSold - a.unitsSold);
+        const sortedSummary = summary
+            .filter(p => p.unitsSold > 0) 
+            .sort((a, b) => b.unitsSold - a.unitsSold);
 
         return NextResponse.json(sortedSummary);
 

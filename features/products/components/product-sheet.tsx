@@ -71,6 +71,8 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
     const [recipe, setRecipe] = useState<RecipeItem[]>([]);
     const [calculatedHpp, setCalculatedHpp] = useState<number | null>(null);
 
+    const [productionYield, setProductionYield] = useState<number>(1);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -92,17 +94,21 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                     hppCalculationType: editData.hppCalculationType,
                     manualHpp: editData.manualHpp?.toString() || null, 
                 });
-                // TODO: Idealnya, ambil resep dari API /products/[id] jika tipe OTOMATIS
-        
-                setRecipe([]);
+                
+                setRecipe(editData.recipe || []); 
                 setCalculatedHpp(editData.calculatedHpp);
+                setProductionYield(editData.productionYield || 1); 
+
             } else {
                 form.reset({
-                    name: "", sellingPrice: "",
-                    hppCalculationType: HppType.MANUAL, manualHpp: null,
+                    name: "", 
+                    sellingPrice: "",
+                    hppCalculationType: HppType.MANUAL, 
+                    manualHpp: null,
                 });
                 setRecipe([]);
                 setCalculatedHpp(null);
+                setProductionYield(1); 
             }
         }
     }, [isOpen, isEdit, editData, form]);
@@ -120,17 +126,21 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
             name: values.name,
             sellingPrice: parseFloat(values.sellingPrice.replace(/[^0-9,-]+/g, "").replace(",", ".")),
             hppCalculationType: values.hppCalculationType,
-            manualHpp: values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null,
-            recipe: recipe, 
+            manualHpp: values.hppCalculationType === HppType.MANUAL 
+                ? (values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null) 
+                : null,
+            recipe: values.hppCalculationType === HppType.OTOMATIS ? recipe : null,
+            productionYield: values.hppCalculationType === HppType.OTOMATIS ? productionYield : null,
+            calculatedHpp: values.hppCalculationType === HppType.OTOMATIS ? calculatedHpp : null,
         };
-
-        const url = isEdit ? `/api/products/${editData?.id}` : "/api/products";
-        const method = isEdit ? "PATCH" : "POST";
         
         try {
             const response = await fetch("/api/products", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${token}` 
+                },
                 body: JSON.stringify(apiData)
             });
             
@@ -153,10 +163,11 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
         }
     };
 
-    // Callback saat kalkulator ditutup
-    const onCalculatorSave = (newRecipe: RecipeItem[], newHpp: number) => {
+    const onCalculatorSave = (newRecipe: RecipeItem[], newHppPerUnit: number, newYield: number) => {
         setRecipe(newRecipe);
-        setCalculatedHpp(newHpp);
+        setCalculatedHpp(newHppPerUnit); 
+        console.log("HPP per unit: ", newHppPerUnit);
+        setProductionYield(newYield); 
         setIsCalculatorOpen(false);
     };
     
@@ -167,6 +178,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                 onClose={() => setIsCalculatorOpen(false)}
                 onSave={onCalculatorSave}
                 initialRecipe={recipe}
+                initialYield={productionYield}
             />
         
             <Sheet open={isOpen} onOpenChange={onClose}>
@@ -189,7 +201,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                             
                             <FormField name="sellingPrice" control={form.control} render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Harga Jual</FormLabel>
+                                    <FormLabel>Harga Jual (per pcs)</FormLabel>
                                     <FormControl>
                                         <CurrencyInput
                                             name={field.name}
@@ -208,7 +220,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
 
                             <FormField name="hppCalculationType" control={form.control} render={({ field }) => (
                                 <FormItem className="space-y-3">
-                                    <FormLabel>Metode Hitung HPP</FormLabel>
+                                    <FormLabel>Metode Hitung Modal Per Unit (HPP)</FormLabel>
                                     <FormControl>
                                         <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
                                             <FormItem className="flex items-center space-x-2">
@@ -228,7 +240,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                             {hppType === HppType.MANUAL && (
                                 <FormField name="manualHpp" control={form.control} render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>HPP Manual</FormLabel>
+                                        <FormLabel>Modal Produk</FormLabel>
                                         <FormControl>
                                             <CurrencyInput
                                                 name={field.name}
@@ -248,8 +260,8 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                             )}
                             
                             {hppType === HppType.OTOMATIS && (
-                                <div className="space-y-2">
-                                    <FormLabel>HPP Otomatis (via Kalkulator)</FormLabel>
+                                <div className="space-y-2 mt-8">
+                                    <FormLabel>Kalkulator HPP</FormLabel>
                                     <Button type="button" variant="outline" className="w-full" onClick={() => setIsCalculatorOpen(true)}>
                                         <Calculator className="size-4 mr-2" />
                                         {recipe.length > 0 ? `Edit Resep (${recipe.length} bahan)` : "Buka Kalkulator Resep"}
@@ -257,7 +269,9 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                                     {calculatedHpp !== null && (
                                         <div className="p-2 bg-gray-100 rounded-md text-center">
                                             <p className="text-sm text-gray-600">Total HPP Dihitung:</p>
-                                            <p className="font-bold text-lg">Rp {calculatedHpp.toLocaleString('id-ID')}</p>
+                                            <p className="font-bold text-lg">
+                                                Rp {calculatedHpp.toLocaleString('id-ID')}
+                                            </p>
                                         </div>
                                     )}
                                     <FormDescription>HPP akan dihitung dari bahan baku yang Anda pilih.</FormDescription>

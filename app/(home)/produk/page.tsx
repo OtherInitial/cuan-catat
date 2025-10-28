@@ -10,6 +10,7 @@ import { useNewProductSheet } from "@/features/products/hooks/use-new-product-sh
 import { columns } from "./columns";
 import { ProductSheet } from "@/features/products/components/product-sheet";
 import { EditHppSheet } from "@/features/products/components/edit-hpp-sheet"; 
+import { RecipeItem } from "@/features/products/components/hpp-calculator-modal"; 
 
 export interface Product {
     id: string;
@@ -18,6 +19,8 @@ export interface Product {
     hppCalculationType: "MANUAL" | "OTOMATIS";
     manualHpp: number | null;
     calculatedHpp: number | null;
+    recipe: RecipeItem[] | null; 
+    productionYield: number | null;
 }
 
 function getAuthToken(): string | null { 
@@ -25,7 +28,7 @@ function getAuthToken(): string | null {
         return localStorage.getItem("token");
     }
     return null;
- }
+}
 
 export default function ProdukPage() {
     const [data, setData] = useState<Product[]>([]);

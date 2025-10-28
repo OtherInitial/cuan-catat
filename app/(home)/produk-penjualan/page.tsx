@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { 
+    Card, 
+    CardContent, 
+    CardHeader, 
+    CardTitle 
+} from '@/components/ui/card';
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableHead, 
+    TableHeader, 
+    TableRow,
 } from "@/components/ui/table";
 
 interface ProductSale {
@@ -24,7 +35,7 @@ function getAuthToken(): string | null {
         return localStorage.getItem("token");
     }
     return null;
- }
+}
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("id-ID", {
