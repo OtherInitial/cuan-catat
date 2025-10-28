@@ -79,8 +79,7 @@ export async function GET(req: NextRequest) {
             })
         ]);
 
-        const salesStats = await db.transaction.groupBy({
-            by: ['productId'],
+        const salesStats = await db.transaction.findMany({
             where: {
                 userId: authUser.id,
                 date: { 
@@ -90,9 +89,9 @@ export async function GET(req: NextRequest) {
                 type: TransactionType.PEMASUKAN,
                 productId: { not: null } 
             },
-            _count: { id: true }, 
-            orderBy: { _count: { id: 'desc' } }, 
-            take: 1, 
+            select: {
+                productId: true,
+            }
         });
 
         const totalUnitsSold = await db.transaction.count({
@@ -106,13 +105,22 @@ export async function GET(req: NextRequest) {
             }
         });
 
+        const productCounts = salesStats.reduce((acc, tx) => {
+            if (tx.productId) {
+                acc[tx.productId] = (acc[tx.productId] || 0) + 1;
+            }
+            return acc;
+        }, {} as Record<string, number>);
+
+        const bestProductId = Object.entries(productCounts).sort((a, b) => b[1] - a[1])[0];
+
         let bestProductInfo = { name: "N/A", units: 0 };
-        if (salesStats.length > 0) {
+        if (bestProductId) {
             const product = await db.product.findUnique({
-                where: { id: salesStats[0].productId! }
+                where: { id: bestProductId[0] }
             });
             if (product) {
-                bestProductInfo = { name: product.name, units: salesStats[0]._count.id };
+                bestProductInfo = { name: product.name, units: bestProductId[1] };
             }
         }
 
