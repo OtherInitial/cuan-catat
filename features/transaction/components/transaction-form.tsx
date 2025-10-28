@@ -9,6 +9,7 @@ import CreatableSelect from 'react-select/creatable';
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import CurrencyInput from 'react-currency-input-field';
+import { useState, useEffect } from "react";
 
 import {
     Form,
@@ -34,7 +35,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Textarea } from "@/components/ui/textarea"; 
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
     date: z.date(),
@@ -57,7 +60,6 @@ type Option = {
 type Props = {
     onSubmit: (values: FormValues) => void;
     disabled: boolean;
-    // categoryOptions: Option[];
     productOptions: Option[];
     paymentMethodOptions: Option[];
     initialValues? : FormValues; 
@@ -67,12 +69,13 @@ type Props = {
 export const TransactionForm = ({
     onSubmit,
     disabled,
-    // categoryOptions,
     productOptions,
     paymentMethodOptions,
     initialValues,
     isEdit
 }: Props) => {
+    const [isProductMode, setIsProductMode] = useState(false);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialValues || {
@@ -92,14 +95,41 @@ export const TransactionForm = ({
         name: 'type' 
     });
 
+    const watchedProductId = useWatch({
+        control: form.control,
+        name: 'productId'
+    });
+
+    // Auto-fill itemName when product is selected
+    useEffect(() => {
+        if (isProductMode && watchedProductId) {
+            const selectedProduct = productOptions.find(opt => opt.value === watchedProductId);
+            if (selectedProduct) {
+                form.setValue('itemName', selectedProduct.label);
+            }
+        }
+    }, [watchedProductId, isProductMode, productOptions, form]);
+
+    // Reset product when switching modes
+    useEffect(() => {
+        if (!isProductMode) {
+            form.setValue('productId', null);
+        }
+    }, [isProductMode, form]);
+
+    // Reset product mode when switching to PENGELUARAN
+    useEffect(() => {
+        if (watchedType !== TransactionType.PEMASUKAN) {
+            setIsProductMode(false);
+        }
+    }, [watchedType]);
+
     const handleSubmit = (values: FormValues) => {
         if (values.type !== TransactionType.PEMASUKAN) {
-            values.productId = null;
+            values.productId = "";
         }
         onSubmit(values);
     }
-
-    // console.log(watchedType);
 
     return (
         <Form {...form}>
@@ -108,10 +138,10 @@ export const TransactionForm = ({
                     name="date"
                     control={form.control}
                     render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Tanggal</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
+                        <FormItem>
+                            <FormLabel>Tanggal</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button
                                             variant={"outline"}
@@ -128,19 +158,19 @@ export const TransactionForm = ({
                                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                         </Button>
                                     </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
                                     <Calendar
                                         mode="single"
                                         selected={field.value}
                                         onSelect={field.onChange}
                                         initialFocus
                                     />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                                </FormItem>
-                        )}
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
 
                 <FormField
@@ -173,37 +203,31 @@ export const TransactionForm = ({
                         </FormItem>
                     )}
                 />
-                
-                <FormField
-                    name="itemName"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Nama Item</FormLabel>
-                            <FormControl>
-                                <Input
-                                    {...field}
-                                    disabled={disabled}
-                                    placeholder="Ketik nama item"
-                                    className="text-sm"
-                                    required
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
 
                 {watchedType === TransactionType.PEMASUKAN && (
+                    <div className="flex items-center space-x-2 rounded-lg border p-3 bg-muted/50">
+                        <Switch
+                            id="product-mode"
+                            checked={isProductMode}
+                            onCheckedChange={setIsProductMode}
+                            disabled={disabled}
+                        />
+                        <Label htmlFor="product-mode" className="cursor-pointer text-sm font-medium">
+                            Ini adalah penjualan produk
+                        </Label>
+                    </div>
+                )}
+
+                {isProductMode && watchedType === TransactionType.PEMASUKAN ? (
                     <FormField
                         name="productId"
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Produk Terjual (Opsional)</FormLabel>
+                                <FormLabel>Pilih Produk</FormLabel>
                                 <Select
-                                    onValueChange={(value) => field.onChange(value || null)} 
-                                    value={field.value ?? ""} 
+                                    onValueChange={(value) => field.onChange(value)}
+                                    value={field.value || undefined}
                                     disabled={disabled}
                                 >
                                     <FormControl className="w-full">
@@ -212,7 +236,6 @@ export const TransactionForm = ({
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="">-- Bukan Penjualan Produk --</SelectItem> 
                                         {productOptions.map(option => (
                                             <SelectItem key={option.value} value={option.value}>
                                                 {option.label}
@@ -221,36 +244,33 @@ export const TransactionForm = ({
                                     </SelectContent>
                                 </Select>
                                 <FormDescription>
-                                    Pilih jika ini adalah penjualan dari daftar produk Anda.
+                                    Nama item akan otomatis terisi dari produk yang dipilih
                                 </FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
+                ) : (
+                    <FormField
+                        name="itemName"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nama Item</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={disabled}
+                                        placeholder="Ketik nama item"
+                                        className="text-sm"
+                                        required
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 )}
-                
-                {/* <FormField
-                    name="categoryId"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Kategori</FormLabel>
-                            <FormControl>
-                                <CreatableSelect
-                                    className="text-sm" 
-                                    placeholder="Pilih atau ketik kategori baru"
-                                    isDisabled={disabled}
-                                    options={categoryOptions}
-                                    value={categoryOptions.find(opt => opt.value === field.value) || null}
-                                    onChange={(option) => field.onChange(option?.value || null)}
-                                    onCreateOption={(inputValue) => field.onChange(inputValue)}
-                                    isClearable
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                /> */}
 
                 <FormField
                     name="paymentMethodId" 
@@ -302,25 +322,6 @@ export const TransactionForm = ({
                         </FormItem>
                     )}
                 />
-
-                {/* <FormField
-                    name="note"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Catatan (Opsional)</FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    {...field}
-                                    value={field.value ?? ""} 
-                                    disabled={disabled}
-                                    placeholder="Tulis catatan tambahan..."
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                /> */}
 
                 <Button className="w-full" disabled={disabled}>
                     {disabled ? <Loader2 className="size-4 animate-spin" /> : (isEdit? "Simpan Perubahan" : "Buat Transaksi")}

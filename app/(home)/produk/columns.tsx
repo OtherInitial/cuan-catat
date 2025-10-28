@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Product } from "./page"; 
 import { Badge } from "@/components/ui/badge";
+import { Actions } from "./actions";
 
 const formatCurrency = (value: number | null) => {
     if (value === null) return "-";
@@ -52,5 +53,11 @@ export const columns: ColumnDef<Product>[] = [
             return <Badge variant={type === "MANUAL" ? "outline" : "default"}>{type}</Badge>
         }
     },
-    // TODO: Tambahkan 'actions' (Edit, Delete) di sini
+    {
+        id: "actions",
+        cell: ({ row, table }) => {
+            const { onReload } = table.options.meta as any; 
+            return <Actions product={row.original} onReload={onReload} />
+        },
+    },
 ];

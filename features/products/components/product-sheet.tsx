@@ -1,20 +1,40 @@
 "use client";
 
 import { z } from "zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { HppType } from "@prisma/client";
-import { Loader2, Calculator } from "lucide-react";
 import { toast } from "sonner";
-import { useNewProductSheet } from "@/features/products/hooks/use-new-product-sheet";
+import { HppType } from "@prisma/client";
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { Loader2, Calculator } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import CurrencyInput from 'react-currency-input-field';
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { useNewProductSheet } from "@/features/products/hooks/use-new-product-sheet";
+import { useEditProductSheet } from "@/features/products/hooks/use-edit-product-sheet";
+
+import { 
+    Form, 
+    FormControl, 
+    FormField, 
+    FormItem, 
+    FormLabel, 
+    FormMessage, 
+    FormDescription 
+} from "@/components/ui/form";
+import { 
+    Sheet, 
+    SheetContent, 
+    SheetHeader, 
+    SheetTitle, 
+    SheetDescription, 
+    SheetFooter 
+} from "@/components/ui/sheet";
+import { 
+    RadioGroup, 
+    RadioGroupItem 
+} from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import CurrencyInput from 'react-currency-input-field';
 
 import { HppCalculatorModal, RecipeItem } from "./hpp-calculator-modal"; 
 
@@ -26,6 +46,7 @@ const formSchema = z.object({
 });
 
 type FormValues = z.input<typeof formSchema>;
+
 function getAuthToken(): string | null { 
     if (typeof window !== "undefined") {
         return localStorage.getItem("token");
@@ -34,7 +55,13 @@ function getAuthToken(): string | null {
  }
 
 export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
-    const { isOpen, onClose } = useNewProductSheet();
+    const { isOpen: isNewOpen, onClose: onNewClose } = useNewProductSheet();
+    const { isOpen: isEditOpen, onClose: onEditClose, data: editData } = useEditProductSheet();
+
+    const isOpen = isNewOpen || isEditOpen;
+    const isEdit = isEditOpen; 
+
+    const onClose = isEdit ? onEditClose : onNewClose; 
     
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, setIsPending] = useState(false);
@@ -56,6 +83,30 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
 
     const hppType = form.watch("hppCalculationType");
 
+    useEffect(() => {
+        if (isOpen) {
+            if (isEdit && editData) {
+                form.reset({
+                    name: editData.name,
+                    sellingPrice: editData.sellingPrice.toString(), 
+                    hppCalculationType: editData.hppCalculationType,
+                    manualHpp: editData.manualHpp?.toString() || null, 
+                });
+                // TODO: Idealnya, ambil resep dari API /products/[id] jika tipe OTOMATIS
+        
+                setRecipe([]);
+                setCalculatedHpp(editData.calculatedHpp);
+            } else {
+                form.reset({
+                    name: "", sellingPrice: "",
+                    hppCalculationType: HppType.MANUAL, manualHpp: null,
+                });
+                setRecipe([]);
+                setCalculatedHpp(null);
+            }
+        }
+    }, [isOpen, isEdit, editData, form]);
+
     const onSubmit = async (values: FormValues) => {
         setIsPending(true);
         const token = getAuthToken();
@@ -72,6 +123,9 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
             manualHpp: values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null,
             recipe: recipe, 
         };
+
+        const url = isEdit ? `/api/products/${editData?.id}` : "/api/products";
+        const method = isEdit ? "PATCH" : "POST";
         
         try {
             const response = await fetch("/api/products", {
@@ -82,7 +136,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
             
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.message || "Gagal membuat produk");
+                throw new Error(err.message || `Gagal ${isEdit ? 'update' : 'membuat'} produk`);
             }
             
             toast.success("Produk berhasil dibuat!");
@@ -118,9 +172,9 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
             <Sheet open={isOpen} onOpenChange={onClose}>
                 <SheetContent className="overflow-y-auto">
                     <SheetHeader>
-                        <SheetTitle>Tambah Produk Baru</SheetTitle>
+                        <SheetTitle>{isEdit ? "Edit Produk" : "Tambah Produk Baru"}</SheetTitle>
                         <SheetDescription>
-                            Masukkan detail produk yang Anda jual.
+                            {isEdit ? "Perbarui detail produk ini." : "Masukkan detail produk yang Anda jual."}
                         </SheetDescription>
                     </SheetHeader>
                     <Form {...form}>
@@ -213,7 +267,7 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
                             <SheetFooter>
                                 <Button type="submit" disabled={isPending} className="w-full">
                                     {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
-                                    Simpan Produk
+                                    {isEdit ? "Simpan Perubahan" : "Simpan Produk"}
                                 </Button>
                             </SheetFooter>
                         </form>

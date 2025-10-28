@@ -30,6 +30,7 @@ import { FinancialReport } from "@/app/(home)/report/columns"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  meta?: any;
 }
 
 function getAuthToken(): string | null {
@@ -42,6 +43,7 @@ function getAuthToken(): string | null {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  meta
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
@@ -66,6 +68,7 @@ export function DataTable<TData, TValue>({
       sorting,
       rowSelection
     },
+    meta: meta
   })
 
   const selectedRows = table.getFilteredSelectedRowModel().rows;

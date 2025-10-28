@@ -8,7 +8,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { useNewProductSheet } from "@/features/products/hooks/use-new-product-sheet";
 import { columns } from "./columns";
-import { ProductSheet } from "@/features/products/components/product-sheet"; 
+import { ProductSheet } from "@/features/products/components/product-sheet";
+import { EditHppSheet } from "@/features/products/components/edit-hpp-sheet"; 
 
 export interface Product {
     id: string;
@@ -64,6 +65,7 @@ export default function ProdukPage() {
     return (
         <>
             <ProductSheet onReload={onReload} />
+            <EditHppSheet onReload={onReload}/>
 
             <div className="relative -mt-24 container mx-auto px-4 pb-12">
                 <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -82,7 +84,9 @@ export default function ProdukPage() {
                             <Loader2 className="size-8 animate-spin text-gray-500" />
                         </div>
                     ) : (
-                        <DataTable columns={columns} data={data} />
+                        <DataTable columns={columns} data={data} 
+                        meta={{ onReload: onReload }}
+                        />
                     )}
                 </div>
             </div>
