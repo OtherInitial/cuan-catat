@@ -63,6 +63,9 @@ model User {
   avatarUrl String?
   address   String?
 
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
+
   capitalCosts  CapitalCost[]
   indicators    FinancialIndicators[]
   summaries     SummaryMonthly[]

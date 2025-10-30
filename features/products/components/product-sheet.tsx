@@ -127,7 +127,11 @@ export const ProductSheet = ({ onReload }: { onReload: () => void }) => {
             sellingPrice: parseFloat(values.sellingPrice.replace(/[^0-9,-]+/g, "").replace(",", ".")),
             hppCalculationType: values.hppCalculationType,
             manualHpp: values.hppCalculationType === HppType.MANUAL 
-                ? (values.manualHpp ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) : null) 
+                ? (
+                    values.manualHpp 
+                    ? parseFloat(values.manualHpp.replace(/[^0-9,-]+/g, "").replace(",", ".")) 
+                    : null
+                ) 
                 : null,
             recipe: values.hppCalculationType === HppType.OTOMATIS ? recipe : null,
             productionYield: values.hppCalculationType === HppType.OTOMATIS ? productionYield : null,

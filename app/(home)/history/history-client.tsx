@@ -84,7 +84,7 @@ export const HistoryClient = () => {
 
     if (availableYears.length === 0) {
         return (
-            <div className="bg-white shadow-xl rounded-xl p-5 absolute -mt-12 left-5 right-5 space-y-5">
+            <div className="bg-white shadow-xl rounded-xl p-5 absolute mt-12 left-5 right-5 space-y-5">
                 <h1 className="font-semibold text-2xl">Riwayat Keuangan</h1>
                 <p className="text-gray-600">Anda belum memiliki riwayat transaksi.</p>
             </div>

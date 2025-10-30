@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// 1. Tentukan halaman yang BISA diakses tanpa login
 const publicPaths = [
   '/sign-in',
   '/sign-up',
+  '/forgot-password',
+  '/reset-password'
 ];
 
 const authPages = [

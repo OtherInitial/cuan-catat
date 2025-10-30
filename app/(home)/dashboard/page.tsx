@@ -156,7 +156,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="relative -mt-24 container mx-auto px-4 space-y-6 pb-12">
+        <div className="relative -mt-24 container mx-auto px-4 space-y-3 md:space-y-6 pb-12">
             <Card className="shadow-lg border-none">
                 <CardHeader>
                     <CardTitle className="text-base font-medium text-gray-600">
@@ -169,21 +169,21 @@ export default function DashboardPage() {
                         <ShoppingBag className="size-8 text-green-500" />
                         <div>
                             <p className="text-sm text-gray-500">Pendapatan</p>
-                            <p className="text-xl font-semibold">{formatCurrency(data.salesSummary.totalRevenue)}</p>
+                            <p className="text-lg md:text-xl font-semibold">{formatCurrency(data.salesSummary.totalRevenue)}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
                         <Package className="size-8 text-blue-500" />
                         <div>
                             <p className="text-sm text-gray-500">Unit Terjual</p>
-                            <p className="text-xl font-semibold">{data.salesSummary.totalUnitsSold} unit</p>
+                            <p className="text-lg md:text-xl font-semibold">{data.salesSummary.totalUnitsSold} unit</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3 col-span-2 md:col-span-1">
                         <TrendingUp className="size-8 text-purple-500" />
                         <div>
                             <p className="text-sm text-gray-500">Produk Terlaris</p>
-                            <p className="text-xl font-semibold">{data.salesSummary.bestProductName} ({data.salesSummary.bestProductUnits} unit)</p>
+                            <p className="text-lg md:text-xl font-semibold">{data.salesSummary.bestProductName} ({data.salesSummary.bestProductUnits} unit)</p>
                         </div>
                     </div>
                 </CardContent>
@@ -211,14 +211,14 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 md:gap-6">
                 <Card className="shadow-lg border-none">
                     <CardHeader>
                         <CardTitle className="text-base font-medium text-gray-600">Pemasukan</CardTitle>
                         <p className="text-sm text-gray-500">{data.dateRange}</p>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pemasukan)}</p>
+                        <p className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pemasukan)}</p>
                         <PercentDisplay value={data.pemasukanPercent} />
                     </CardContent>
                 </Card>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-gray-500">{data.dateRange}</p>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pengeluaran)}</p>
+                        <p className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{formatCurrency(data.pengeluaran)}</p>
                         <PercentDisplay value={data.pengeluaranPercent} />
                     </CardContent>
                 </Card>

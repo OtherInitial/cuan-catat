@@ -3,7 +3,9 @@
 import { 
     Loader2, 
     Trash, 
-    Settings 
+    Settings, 
+    Plus,
+    Minus
 } from "lucide-react";
 import { toast } from "sonner";
 import Select from "react-select";
@@ -63,7 +65,7 @@ export const HppCalculatorModal = ({
 }: Props) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isManageOpen, setIsManageOpen] = useState(false);
-    const [currentQuantity, setCurrentQuantity] = useState<number>(0);
+    const [currentQuantity, setCurrentQuantity] = useState<string>("0");
     const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
     const [recipeItems, setRecipeItems] = useState<RecipeItem[]>(initialRecipe);
     const [selectedMaterial, setSelectedMaterial] = useState<RawMaterial | null>(null);
@@ -106,7 +108,9 @@ export const HppCalculatorModal = ({
     const hppPerUnit = productionYield > 0 ? totalBatchCost / productionYield : 0;
 
     const handleAddItem = () => {
-        if (!selectedMaterial || currentQuantity <= 0) {
+        const quantityAsNumber = parseFloat(currentQuantity) || 0;
+
+        if (!selectedMaterial || quantityAsNumber <= 0) {
             toast.error("Pilih bahan baku dan isi jumlahnya");
             return;
         }
@@ -123,12 +127,14 @@ export const HppCalculatorModal = ({
                 name: selectedMaterial.name,
                 unit: selectedMaterial.unit,
                 costPerUnit: selectedMaterial.costPerUnit,
-                quantity: currentQuantity,
+                // 2. Simpan sebagai angka
+                quantity: quantityAsNumber, 
             }
         ]);
         
         setSelectedMaterial(null);
-        setCurrentQuantity(0);
+        // 3. Reset state kembali ke string "0"
+        setCurrentQuantity("0"); 
     };
 
     const handleRemoveItem = (rawMaterialId: string) => {
@@ -218,11 +224,18 @@ export const HppCalculatorModal = ({
                                 </div>
                                 <div className="col-span-3 sm:col-span-1">
                                     <Label htmlFor="material-quantity" className="text-sm font-medium">Jumlah</Label>
+                                    
                                     <Input 
                                         id="material-quantity"
-                                        type="number"
+                                        type="text" 
+                                        inputMode="decimal" 
                                         value={currentQuantity}
-                                        onChange={(e) => setCurrentQuantity(parseFloat(e.target.value) || 0)}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                                                setCurrentQuantity(val);
+                                            }
+                                        }}
                                         placeholder="Jml"
                                         className="mt-1"
                                     />
@@ -241,14 +254,37 @@ export const HppCalculatorModal = ({
                             <div className="pt-4 border-t space-y-4">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="production-yield" className="text-base">Jumlah Unit Dihasilkan</Label>
-                                    <Input 
-                                        id="production-yield"
-                                        type="number"
-                                        className="w-28"
-                                        value={productionYield}
-                                        onChange={(e) => setProductionYield(parseFloat(e.target.value) || 0)}
-                                        placeholder="cth: 50"
-                                    />
+                                    <div className="flex items-center mt-1">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-9 rounded-r-none" 
+                                            onClick={() => setProductionYield(prev => Math.max(0, prev - 1))} 
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                        
+                                        <Input 
+                                            id="material-quantity"
+                                            type="text" 
+                                            inputMode="decimal" 
+                                            value={productionYield}
+                                            onChange={(e) => setProductionYield(Math.max(0, parseFloat(e.target.value) || 0))}
+                                            placeholder="Cth: 50"
+                                            className="w-20 text-center rounded-none h-9 focus-visible:ring-offset-0 focus-visible:ring-0"
+                                        />
+                                        
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-9 rounded-l-none" 
+                                            onClick={() => setProductionYield(prev => prev + 1)}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <p className="text-sm font-medium">Total Modal Resep (1x Produksi)</p>

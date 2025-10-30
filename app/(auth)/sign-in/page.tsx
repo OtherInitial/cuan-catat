@@ -131,7 +131,7 @@ export default function Home() {
             </Button>
 
             <Button className="w-full py-6" variant="link" type="button">
-              Lupa password?
+              <Link href="/forgot-password">Lupa password?</Link>
             </Button>
           </div>
         </form>
