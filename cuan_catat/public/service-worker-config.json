@@ -1,0 +1,7 @@
+{
+  "name": "Cuan Catat Service Worker",
+  "version": "1.0.0",
+  "offlineSupport": true,
+  "syncInterval": 30000,
+  "maxSyncRetries": 5
+}
