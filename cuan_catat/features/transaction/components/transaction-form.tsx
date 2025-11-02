@@ -123,7 +123,7 @@ export const TransactionForm = ({
 
     const handleSubmit = (values: FormValues) => {
         if (values.type !== TransactionType.PEMASUKAN) {
-            values.productId = "none";
+            values.productId = null;
         }
         onSubmit(values);
     }

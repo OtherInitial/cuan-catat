@@ -81,12 +81,14 @@ export default function RootLayout({
       </head>
       <body className={`${poppins.className}`} style={{ overflowY: "auto" }}>
         <NextJsTopLoader />
-        <SyncWrapper>
+        <SheetProvider />
+        {children}
+        {/* <SyncWrapper>
           <SheetProvider />
           {children}
           <Toaster richColors position="top-right" />
           {process.env.NODE_ENV === "development" && <PWAStatus />}
-        </SyncWrapper>
+        </SyncWrapper> */}
       </body>
     </html>
   )
