@@ -54,6 +54,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/ikon_apk.ico",
   },
+  applicationName: "Cuan Catat",
+  openGraph: {
+    title: "Cuan Catat",
+    description: "Platform Pencatat Keuangan untuk UMKM",
+    type: "website",
+  },
 }
 
 export default function RootLayout({
@@ -63,6 +69,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Cuan Catat" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+      </head>
       <body className={`${poppins.className}`} style={{ overflowY: "auto" }}>
         <NextJsTopLoader />
         <SyncWrapper>

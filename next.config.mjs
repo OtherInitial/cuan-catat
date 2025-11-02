@@ -22,6 +22,11 @@ export default withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development' ? false : false,
+  reloadOnOnline: true,
+  workboxOptions: {
+    disableDevLogs: true,
+  },
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,

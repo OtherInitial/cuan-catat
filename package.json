@@ -9,7 +9,8 @@
     "seed": "npx prisma db seed",
     "postinstall": "prisma generate",
     "db:seed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed.ts",
-    "db:seed:kritis": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-kritis.ts"
+    "db:seed:kritis": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed-kritis.ts",
+    "generate:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -50,6 +51,7 @@
     "react-select": "^5.10.2",
     "recharts": "^3.3.0",
     "resend": "^6.3.0",
+    "sharp": "^0.34.4",
     "sonner": "^2.0.7",
     "sooner": "^1.1.4",
     "tailwind-merge": "^3.3.1",
